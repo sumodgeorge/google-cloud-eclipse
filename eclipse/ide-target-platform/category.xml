@@ -17,6 +17,8 @@
    <feature id="org.eclipse.wst.common.fproj.sdk" version="0.0.0"/>
    <feature id="org.eclipse.wst.web_sdk.feature" version="0.0.0"/>
    <feature id="org.eclipse.wst.server_adapters.sdk.feature" version="0.0.0"/>
+   <bundle id="org.eclipse.epp.logging.aeri.core" version="2.0.3.v20160905-0759"/>
+   <bundle id="org.eclipse.epp.logging.aeri.ide" version="2.0.3.v20160905-1331"/>
    <bundle id="org.eclipse.jetty.http" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.servlet" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.server" version="0.0.0"/>
@@ -28,4 +30,5 @@
    <bundle id="com.google.gson" version="2.7"/>
    <bundle id="com.google.cloud.tools.appengine" version="0.0.0"/>
    <bundle id="jackson-core-asl" version="1.9.13"/>
+   <repository-reference location="http://download.eclipse.org/releases/neon/" enabled="true" />
 </site>
