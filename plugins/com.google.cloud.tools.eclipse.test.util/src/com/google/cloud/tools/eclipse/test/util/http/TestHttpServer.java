@@ -1,17 +1,25 @@
 package com.google.cloud.tools.eclipse.test.util.http;
 
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.base.Preconditions;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.DefaultHandler;
-import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -25,11 +33,19 @@ public class TestHttpServer extends ExternalResource {
 
   private static final Logger logger = Logger.getLogger(TestHttpServer.class.getName());
 
-  private TemporaryFolder temporaryFolder;
   private Server server;
+
+  private boolean requestHandled = false;
+  private String requestMethod;
+  private Map<String, String[]> requestParameters;
+
+  private TemporaryFolder temporaryFolder;
   private String fileName;
   private String fileContent;
 
+  public TestHttpServer() {}
+
+  /** Sets up a file server. */
   public TestHttpServer(TemporaryFolder temporaryFolder, String fileName, String fileContent) {
     this.temporaryFolder = temporaryFolder;
     this.fileName = fileName;
@@ -38,29 +54,33 @@ public class TestHttpServer extends ExternalResource {
 
   @Override
   protected void before() throws Exception {
-    runServer();
+    if (fileContent == null) {
+      runServer(new OkHandler());
+    } else {
+      runFileServer();
+    }
   }
 
   @Override
   protected void after() {
     stopServer();
+    assertTrue(requestHandled);
   }
 
-  private void runServer() throws Exception {
+  private void runServer(Handler handler) throws Exception {
     server = new Server(new InetSocketAddress("127.0.0.1", 0));
-    ResourceHandler resourceHandler = new ResourceHandler();
+    server.setHandler(new RequestLogger(handler));
+    server.start();
+  }
 
+  private void runFileServer() throws Exception {
     File resourceBase = temporaryFolder.newFolder();
     java.nio.file.Path fileToServe = Files.createFile(resourceBase.toPath().resolve(fileName));
     Files.write(fileToServe, fileContent.getBytes(StandardCharsets.UTF_8));
-    resourceHandler.setResourceBase(resourceBase.getAbsolutePath());
 
-    HandlerList handlers = new HandlerList();
-    handlers.setHandlers(new Handler[] { resourceHandler, new DefaultHandler() });
-    server.setHandler(handlers);
-
-    server.dumpStdErr();
-    server.start();
+    ResourceHandler handler = new ResourceHandler();
+    handler.setResourceBase(resourceBase.getAbsolutePath());
+    runServer(handler);
   }
 
   private void stopServer() {
@@ -78,11 +98,48 @@ public class TestHttpServer extends ExternalResource {
    * <p>
    * Initialized only after the server has started.
    *
-   * @return server address in the form of http://127.0.0.1:&lt;port&gt;
+   * @return server address in the form of http://127.0.0.1:&lt;port&gt;/
    */
   public String getAddress() {
     Preconditions.checkNotNull(server, "server isn't started yet");
     // assume a single server connector
-    return "http://127.0.0.1:" + ((ServerConnector) server.getConnectors()[0]).getLocalPort();
+    return "http://127.0.0.1:" + ((ServerConnector) server.getConnectors()[0]).getLocalPort() + "/";
+  }
+
+  public String getRequestMethod() {
+    Preconditions.checkState(requestHandled);
+    return requestMethod;
+  }
+
+  public Map<String, String[]> getRequestParameters() {
+    Preconditions.checkState(requestHandled);
+    return requestParameters;
+  }
+
+  private class RequestLogger extends HandlerWrapper {
+
+    private RequestLogger(Handler handler) {
+      setHandler(handler);
+    }
+
+    @Override
+    public void handle(String target, Request baseRequest, HttpServletRequest request,
+        HttpServletResponse response) throws IOException, ServletException {
+      Preconditions.checkState(!requestHandled);
+      requestHandled = true;
+      requestMethod = request.getMethod();
+      requestParameters = request.getParameterMap();
+
+      super.handle(target, baseRequest, request, response);
+    }
+  };
+
+  private static class OkHandler extends AbstractHandler {
+    @Override
+    public void handle(String target, Request baseRequest, HttpServletRequest request,
+        HttpServletResponse response) throws IOException, ServletException {
+      baseRequest.setHandled(true);
+      response.setStatus(HttpServletResponse.SC_OK);
+    }
   }
 }
