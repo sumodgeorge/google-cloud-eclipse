@@ -25,9 +25,10 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Simple HTTP server (wrapping an embedded Jetty server) to serve a file on a random available port.
+ * Simple HTTP server (wrapping an embedded Jetty server) that listens on a random available port.
  * <p>
- * Use {@link #getAddress()} to obtain the server's address after it has been started via the {@link #before()} method.
+ * Use {@link #getAddress()} to obtain the server's address after it has been started via the
+ * {@link #before()} method.
  */
 public class TestHttpServer extends ExternalResource {
 
@@ -94,7 +95,7 @@ public class TestHttpServer extends ExternalResource {
   }
 
   /**
-   * Returns the address that can be used to get resources from the server.
+   * Returns the address that can be used to send requests to the server.
    * <p>
    * Initialized only after the server has started.
    *
