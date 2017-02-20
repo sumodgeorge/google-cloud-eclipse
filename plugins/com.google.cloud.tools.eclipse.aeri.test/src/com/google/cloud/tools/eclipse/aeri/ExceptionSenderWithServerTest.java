@@ -16,10 +16,20 @@
 
 package com.google.cloud.tools.eclipse.aeri;
 
+import static org.junit.Assert.assertEquals;
+
+import com.google.cloud.tools.eclipse.test.util.http.TestHttpServer;
+import java.io.IOException;
+import org.junit.Rule;
 import org.junit.Test;
 
-public class DummyTest {
+public class ExceptionSenderWithServerTest {
+
+  @Rule public TestHttpServer server = new TestHttpServer();
 
   @Test
-  public void test() {}
+  public void testSendException() throws IOException {
+    ExceptionSender.sendException(server.getAddress(), "stackTrace", null);
+    assertEquals("POST", server.getRequestMethod());
+  }
 }
