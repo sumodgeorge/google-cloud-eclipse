@@ -3,31 +3,26 @@ package com.google.cloud.tools.eclipse.test.util.http;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.junit.rules.ExternalResource;
-import org.junit.rules.TemporaryFolder;
 
 /**
- * Simple HTTP server (wrapping an embedded Jetty server) to serve a file on a random available port.
+ * Simple HTTP server (wrapping an embedded Jetty server) that listens on a random available port.
  * <p>
- * Use {@link #getAddress()} to obtain the server's address after it has been started via the {@link #before()} method.
+ * Use {@link #getAddress()} to obtain the server's address after it has been started via the
+ * {@link #before()} method.
  */
 public class TestHttpServer extends ExternalResource {
 
@@ -39,26 +34,19 @@ public class TestHttpServer extends ExternalResource {
   private String requestMethod;
   private Map<String, String[]> requestParameters;
 
-  private TemporaryFolder temporaryFolder;
-  private String fileName;
-  private String fileContent;
+  private final String expectedPath;
+  private final String responseContent;
 
-  public TestHttpServer() {}
-
-  /** Sets up a file server. */
-  public TestHttpServer(TemporaryFolder temporaryFolder, String fileName, String fileContent) {
-    this.temporaryFolder = temporaryFolder;
-    this.fileName = fileName;
-    this.fileContent = fileContent;
+  // Examples: new TestHttpServer("/sample.txt", "arbitrary file content");
+  //           new TestHttpServer("/", "<html><body>hello</body></html>");
+  public TestHttpServer(String expectedPath, String responseContent) {
+    this.expectedPath = expectedPath;
+    this.responseContent = responseContent;
   }
 
   @Override
   protected void before() throws Exception {
-    if (fileContent == null) {
-      runServer(new OkHandler());
-    } else {
-      runFileServer();
-    }
+    runServer();
   }
 
   @Override
@@ -67,20 +55,10 @@ public class TestHttpServer extends ExternalResource {
     assertTrue(requestHandled);
   }
 
-  private void runServer(Handler handler) throws Exception {
+  private void runServer() throws Exception {
     server = new Server(new InetSocketAddress("127.0.0.1", 0));
-    server.setHandler(new RequestLogger(handler));
+    server.setHandler(new RequestHandler());
     server.start();
-  }
-
-  private void runFileServer() throws Exception {
-    File resourceBase = temporaryFolder.newFolder();
-    java.nio.file.Path fileToServe = Files.createFile(resourceBase.toPath().resolve(fileName));
-    Files.write(fileToServe, fileContent.getBytes(StandardCharsets.UTF_8));
-
-    ResourceHandler handler = new ResourceHandler();
-    handler.setResourceBase(resourceBase.getAbsolutePath());
-    runServer(handler);
   }
 
   private void stopServer() {
@@ -94,7 +72,7 @@ public class TestHttpServer extends ExternalResource {
   }
 
   /**
-   * Returns the address that can be used to get resources from the server.
+   * Returns the address that can be used to send requests to the server.
    * <p>
    * Initialized only after the server has started.
    *
@@ -116,30 +94,23 @@ public class TestHttpServer extends ExternalResource {
     return requestParameters;
   }
 
-  private class RequestLogger extends HandlerWrapper {
-
-    private RequestLogger(Handler handler) {
-      setHandler(handler);
-    }
+  private class RequestHandler extends AbstractHandler {
 
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request,
         HttpServletResponse response) throws IOException, ServletException {
       Preconditions.checkState(!requestHandled);
-      requestHandled = true;
-      requestMethod = request.getMethod();
-      requestParameters = request.getParameterMap();
 
-      super.handle(target, baseRequest, request, response);
-    }
-  };
+      if (target.equals("/" + expectedPath)) {
+        requestHandled = true;
+        requestMethod = request.getMethod();
+        requestParameters = request.getParameterMap();
 
-  private static class OkHandler extends AbstractHandler {
-    @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request,
-        HttpServletResponse response) throws IOException, ServletException {
-      baseRequest.setHandled(true);
-      response.setStatus(HttpServletResponse.SC_OK);
+        baseRequest.setHandled(true);
+        byte[] bytes = responseContent.getBytes(StandardCharsets.UTF_8);
+        response.getOutputStream().write(bytes);
+        response.setStatus(HttpServletResponse.SC_OK);
+      }
     }
   }
 }
