@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public class ExceptionSenderWithServerTest {
 
-  @Rule public TestHttpServer server = new TestHttpServer();
+  @Rule public TestHttpServer server = new TestHttpServer("/", "");
 
   @Test
   public void testSendException() throws IOException {
