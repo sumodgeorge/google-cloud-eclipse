@@ -48,10 +48,8 @@ public class FileDownloaderWithServerTest {
 
   @Test
   public void testDownload_successful() throws IOException {
-    FileDownloader fileDownloader =
-        new FileDownloader(new Path(temporaryFolder.newFolder().getAbsolutePath()));
-    IPath downloadPath = fileDownloader.download(
-        new URL(server.getAddress() + FILE_TO_DOWNLOAD), new NullProgressMonitor());
+    FileDownloader fileDownloader = new FileDownloader(new Path(temporaryFolder.newFolder().getAbsolutePath()));
+    IPath downloadPath = fileDownloader.download(new URL(server.getAddress() + FILE_TO_DOWNLOAD), new NullProgressMonitor());
     assertNotNull(downloadPath);
     File downloadedFile = downloadPath.toFile();
     assertTrue(downloadedFile.exists());
