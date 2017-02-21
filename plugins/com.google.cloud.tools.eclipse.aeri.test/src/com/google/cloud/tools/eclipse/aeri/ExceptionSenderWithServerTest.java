@@ -17,19 +17,23 @@
 package com.google.cloud.tools.eclipse.aeri;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.tools.eclipse.test.util.http.TestHttpServer;
+import com.google.cloud.tools.eclipse.util.CloudToolsInfo;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class ExceptionSenderWithServerTest {
 
-  @Rule public TestHttpServer server = new TestHttpServer("/", "");
+  @Rule public TestHttpServer server = new TestHttpServer("", "");
 
   @Test
   public void testSendException() throws IOException {
     ExceptionSender.sendException(server.getAddress(), "stackTrace", null);
     assertEquals("POST", server.getRequestMethod());
+    assertTrue(server.requestParametersContain("product", "CT4E"));
+    assertTrue(server.requestParametersContain("version", CloudToolsInfo.getToolsVersion()));
   }
 }

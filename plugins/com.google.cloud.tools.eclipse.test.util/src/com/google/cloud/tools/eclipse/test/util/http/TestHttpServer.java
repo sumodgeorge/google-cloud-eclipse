@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,6 +95,16 @@ public class TestHttpServer extends ExternalResource {
     return requestParameters;
   }
 
+  public boolean requestParametersContain(String key, String value) {
+    Preconditions.checkState(requestHandled);
+    String[] values = requestParameters.get(key);
+    if (values == null) {
+      return false;
+    }
+
+    return Arrays.asList(values).contains(value);
+  }
+
   private class RequestHandler extends AbstractHandler {
 
     @Override
@@ -101,7 +112,7 @@ public class TestHttpServer extends ExternalResource {
         HttpServletResponse response) throws IOException, ServletException {
       Preconditions.checkState(!requestHandled);
 
-      if (target.equals(expectedPath)) {
+      if (target.equals("/" + expectedPath)) {
         requestHandled = true;
         requestMethod = request.getMethod();
         requestParameters = request.getParameterMap();
