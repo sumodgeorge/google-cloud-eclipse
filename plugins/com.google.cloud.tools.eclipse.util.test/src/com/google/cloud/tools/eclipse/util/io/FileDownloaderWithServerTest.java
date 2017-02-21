@@ -40,7 +40,7 @@ import org.junit.rules.TemporaryFolder;
  */
 public class FileDownloaderWithServerTest {
 
-  private static final String FILE_TO_DOWNLOAD = "index.html";
+  private static final String FILE_TO_DOWNLOAD = "/index.html";
   private static final String FILE_CONTENT = "<html><body>hello</body></html>";
 
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();

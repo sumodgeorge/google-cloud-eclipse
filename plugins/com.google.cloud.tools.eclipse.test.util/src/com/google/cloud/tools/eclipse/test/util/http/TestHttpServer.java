@@ -101,7 +101,7 @@ public class TestHttpServer extends ExternalResource {
         HttpServletResponse response) throws IOException, ServletException {
       Preconditions.checkState(!requestHandled);
 
-      if (target.equals("/" + expectedPath)) {
+      if (target.equals(expectedPath)) {
         requestHandled = true;
         requestMethod = request.getMethod();
         requestParameters = request.getParameterMap();
