@@ -37,8 +37,8 @@ public class TestHttpServer extends ExternalResource {
   private final String expectedPath;
   private final String responseContent;
 
-  // Examples: new TestHttpServer("/sample.txt", "arbitrary file content");
-  //           new TestHttpServer("/", "<html><body>hello</body></html>");
+  // Examples: new TestHttpServer("folder/sample.txt", "arbitrary file content");
+  //           new TestHttpServer("", "<html><body>root</body></html>");
   public TestHttpServer(String expectedPath, String responseContent) {
     this.expectedPath = expectedPath;
     this.responseContent = responseContent;
