@@ -3,10 +3,14 @@ package com.google.cloud.tools.eclipse.test.util.http;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.CharStreams;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,8 +36,11 @@ public class TestHttpServer extends ExternalResource {
   private Server server;
 
   private boolean requestHandled = false;
+
   private String requestMethod;
+  private String requestBody;
   private Map<String, String[]> requestParameters;
+  private final Map<String, String> requestHeaders = new HashMap<>();
 
   private final String expectedPath;
   private final String responseContent;
@@ -95,6 +102,16 @@ public class TestHttpServer extends ExternalResource {
     return requestParameters;
   }
 
+  public Map<String, String> getRequestHeaders() {
+    Preconditions.checkState(requestHandled);
+    return requestHeaders;
+  }
+
+  public String getRequestBody() {
+    Preconditions.checkState(requestHandled);
+    return requestBody;
+  }
+
   public boolean requestParametersContain(String key, String value) {
     Preconditions.checkState(requestHandled);
     String[] values = requestParameters.get(key);
@@ -116,6 +133,13 @@ public class TestHttpServer extends ExternalResource {
         requestHandled = true;
         requestMethod = request.getMethod();
         requestParameters = request.getParameterMap();
+        for (Enumeration<String> headers = request.getHeaderNames(); headers.hasMoreElements(); ) {
+          String header = headers.nextElement();
+          requestHeaders.put(header, request.getHeader(header));
+        }
+
+        requestBody = CharStreams.toString(
+            new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8));
 
         baseRequest.setHandled(true);
         byte[] bytes = responseContent.getBytes(StandardCharsets.UTF_8);
