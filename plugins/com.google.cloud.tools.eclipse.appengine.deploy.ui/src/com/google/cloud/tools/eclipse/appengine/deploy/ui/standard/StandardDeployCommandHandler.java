@@ -68,6 +68,7 @@ public class StandardDeployCommandHandler extends AbstractHandler {
 
   @Override
   public Object execute(ExecutionEvent event) throws ExecutionException {
+    if(true)throw new IllegalArgumentException("abc");
     try {
       IProject project = ProjectFromSelectionHelper.getProject(event);
       if (project == null) {

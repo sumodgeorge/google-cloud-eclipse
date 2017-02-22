@@ -19,42 +19,85 @@ package com.google.cloud.tools.eclipse.aeri;
 import com.google.cloud.tools.eclipse.util.CloudToolsInfo;
 import com.google.cloud.tools.eclipse.util.io.HttpUtil;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eclipse.epp.logging.aeri.core.IStackTraceElement;
+import org.eclipse.epp.logging.aeri.core.IThrowable;
 
 public class ExceptionSender {
 
   private static final Logger logger = Logger.getLogger(ExceptionSender.class.getName());
 
-  private static final String REPORT_PRODUCT_ID = "CT4E"; //$NON-NLS-1$
-  private static final String REPORT_ENDPOINT = "https://clients2.google.com/cr/staging_report"; //$NON-NLS-1$
+  private final String endpointUrl;
 
-  // Be careful of PII.
-  public static void sendException(String stackTrace, String extraComments) {
-    sendException(REPORT_ENDPOINT, stackTrace, extraComments);
+  ExceptionSender() {
+    endpointUrl = "https://clients2.google.com/cr/staging_report";
   }
 
-  @VisibleForTesting
-  static void sendException(String url, String stackTrace, String extraComments) {
+  ExceptionSender(String endpointUrl) {
+    this.endpointUrl = endpointUrl;
+  }
+
+  void sendException(IThrowable exception, String eclipseBuildId, String javaVersion,
+      String os, String osVersion, String userSeverity, String userComment) {
     Map<String, String> parameters = new HashMap<>();
-    parameters.put("product", REPORT_PRODUCT_ID); //$NON-NLS-1$
-    parameters.put("version", CloudToolsInfo.getToolsVersion()); //$NON-NLS-1$
-    parameters.put("exception_info", stackTrace); //$NON-NLS-1$
-    if (!Strings.isNullOrEmpty(extraComments)) {
-      parameters.put("comments", extraComments); //$NON-NLS-1$
-    }
+    parameters.put("product", CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID);
+    parameters.put("version", CloudToolsInfo.getToolsVersion());
+    parameters.put("exception_info", formatStacktrace(exception));
+
+    String extraInfo = "eclipseBuildId: " + handleNullOrEmpty(eclipseBuildId) + "\n"
+                     + "javaVersion: " + handleNullOrEmpty(javaVersion) + "\n"
+                     + "os: " + os + " " + handleNullOrEmpty(osVersion) + "\n"
+                     + "userSeverity: " + handleNullOrEmpty(userSeverity) + "\n"
+                     + "userComment: " + handleNullOrEmpty(userComment);
+    // "comments" seems to be the only viable place we can put extra info.
+    parameters.put("comments", extraInfo);
 
     try {
       // Internal system expects the product ID and version in URL too.
-      String urlParameters = "?product=" + REPORT_PRODUCT_ID //$NON-NLS-1$
-          + "&version=" + CloudToolsInfo.getToolsVersion(); //$NON-NLS-1$
-      HttpUtil.sendPost(url + urlParameters, parameters);
+      String urlParameters = "?product=" + CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID
+          + "&version=" + CloudToolsInfo.getToolsVersion();
+      int code = HttpUtil.sendPostMultipart(endpointUrl + urlParameters, parameters);
+      if (code != 200) {
+        logger.log(Level.WARNING, "Failed to send exception report. HTTP response code: " + code);
+      }
     } catch (IOException ex) {
-      logger.log(Level.WARNING, "Failed to send exception report.", ex); //$NON-NLS-1$
+      logger.log(Level.WARNING, "Failed to send exception report.", ex);
     }
+  }
+
+  private static String handleNullOrEmpty(String string) {
+    if (string == null || string.trim().isEmpty()) {
+      return "__NONE__";
+    }
+    return string;
+  }
+
+  /** Format the modeled stack trace. */
+  @VisibleForTesting
+  static String formatStacktrace(IThrowable exception) {
+    if (exception == null) {
+      return "__NONE__";
+    }
+
+    // We need this manual formatting because exception of type "Exception" isn't anonymized.
+    StringBuilder trace =
+        new StringBuilder(exception.getClassName() + ": " + exception.getMessage());
+    for (IStackTraceElement frame : exception.getStackTrace()) {
+      trace.append("\n\tat ").append(frame.getClassName())
+          .append('.').append(frame.getMethodName());
+      trace.append('(');
+      if (frame.getFileName() != null) {
+        trace.append(frame.getFileName());
+        if (frame.getLineNumber() > 0) {
+          trace.append(':').append(frame.getLineNumber());
+        }
+      }
+      trace.append(')');
+    }
+    return trace.toString();
   }
 }
