@@ -32,13 +32,13 @@ public class ExceptionSenderTest {
 
   @Test
   public void testFormatStackTrace_nullThrowable() {
-    assertEquals("__NONE__", ExceptionSender.formatStacktrace(null));
+    assertEquals("__NONE__", ExceptionSender.formatStackTrace(null));
   }
 
   @Test
   public void testFormatStackTrace() {
     IThrowable aeriThrowable = AeriTestUtil.getMockIThrowable(AeriTestUtil.sampleThrowable);
-    String formatted = ExceptionSender.formatStacktrace(aeriThrowable);
+    String formatted = ExceptionSender.formatStackTrace(aeriThrowable);
     assertEquals(EXPECTED_FORMATTING, formatted);
   }
 }

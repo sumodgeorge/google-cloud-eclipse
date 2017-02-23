@@ -63,7 +63,7 @@ public class ExceptionSender {
     Map<String, String> parameters = new HashMap<>();
     parameters.put(PRODUCT_KEY, CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID);
     parameters.put(VERSION_KEY, CloudToolsInfo.getToolsVersion());
-    parameters.put(EXCEPTION_INFO_KEY, formatStacktrace(exception));
+    parameters.put(EXCEPTION_INFO_KEY, formatStackTrace(exception));
 
     String extraInfo = ECLIPSE_BUILD_ID_LABEL + nullOrEmptyToNone(eclipseBuildId) + "\n"
         + JAVA_VERSION_LABEL + nullOrEmptyToNone(javaVersion) + "\n"
@@ -95,7 +95,7 @@ public class ExceptionSender {
 
   /** Format the modeled stack trace. */
   @VisibleForTesting
-  static String formatStacktrace(IThrowable exception) {
+  static String formatStackTrace(IThrowable exception) {
     if (exception == null) {
       return NONE_MARKER;
     }
