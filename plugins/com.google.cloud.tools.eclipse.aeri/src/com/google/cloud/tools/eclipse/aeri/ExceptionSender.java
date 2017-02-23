@@ -20,6 +20,7 @@ import com.google.cloud.tools.eclipse.util.CloudToolsInfo;
 import com.google.cloud.tools.eclipse.util.io.HttpUtil;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -35,6 +36,17 @@ public class ExceptionSender {
 
   private static final String NONE_MARKER = "__NONE__";
 
+  private static final String PRODUCT_KEY = "product";
+  private static final String VERSION_KEY = "version";
+  private static final String EXCEPTION_INFO_KEY = "exception_info";
+  private static final String COMMENTS_KEY = "comments";
+
+  private static final String ECLIPSE_BUILD_ID_LABEL = "eclipseBuildId: ";
+  private static final String JAVA_VERSION_LABEL = "javaVersion: ";
+  private static final String OS_LABEL = "os: ";
+  private static final String USER_SEVERITY_LABEL = "userSeverity: ";
+  private static final String USER_COMMENT_LABEL = "userComment: ";
+
   private final String endpointUrl;
 
   ExceptionSender() {
@@ -49,24 +61,24 @@ public class ExceptionSender {
   void sendException(IThrowable exception, String eclipseBuildId, String javaVersion,
       String os, String osVersion, String userSeverity, String userComment) {
     Map<String, String> parameters = new HashMap<>();
-    parameters.put("product", CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID);
-    parameters.put("version", CloudToolsInfo.getToolsVersion());
-    parameters.put("exception_info", formatStacktrace(exception));
+    parameters.put(PRODUCT_KEY, CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID);
+    parameters.put(VERSION_KEY, CloudToolsInfo.getToolsVersion());
+    parameters.put(EXCEPTION_INFO_KEY, formatStacktrace(exception));
 
-    String extraInfo = "eclipseBuildId: " + nullOrEmptyToNone(eclipseBuildId) + "\n"
-                     + "javaVersion: " + nullOrEmptyToNone(javaVersion) + "\n"
-                     + "os: " + os + " " + nullOrEmptyToNone(osVersion) + "\n"
-                     + "userSeverity: " + nullOrEmptyToNone(userSeverity) + "\n"
-                     + "userComment: " + nullOrEmptyToNone(userComment);
+    String extraInfo = ECLIPSE_BUILD_ID_LABEL + nullOrEmptyToNone(eclipseBuildId) + "\n"
+        + JAVA_VERSION_LABEL + nullOrEmptyToNone(javaVersion) + "\n"
+        + OS_LABEL + os + " " + nullOrEmptyToNone(osVersion) + "\n"
+        + USER_SEVERITY_LABEL + nullOrEmptyToNone(userSeverity) + "\n"
+        + USER_COMMENT_LABEL + nullOrEmptyToNone(userComment);
     // "comments" seems to be the only viable place where we can put extra info.
-    parameters.put("comments", extraInfo);
+    parameters.put(COMMENTS_KEY, extraInfo);
 
     try {
       // Internal system expects the product ID and version in URL too.
       String urlParameters = "?product=" + CloudToolsInfo.EXCEPTION_REPORT_PRODUCT_ID
           + "&version=" + CloudToolsInfo.getToolsVersion();
       int code = HttpUtil.sendPostMultipart(endpointUrl + urlParameters, parameters);
-      if (code != 200) {
+      if (code != HttpURLConnection.HTTP_OK) {
         logger.log(Level.WARNING, "Failed to send exception report. HTTP response code: " + code);
       }
     } catch (IOException ex) {
