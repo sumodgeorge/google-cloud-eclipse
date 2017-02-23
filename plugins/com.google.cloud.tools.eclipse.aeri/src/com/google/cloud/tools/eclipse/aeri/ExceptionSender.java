@@ -58,7 +58,7 @@ public class ExceptionSender {
                      + "os: " + os + " " + nullOrEmptyToNone(osVersion) + "\n"
                      + "userSeverity: " + nullOrEmptyToNone(userSeverity) + "\n"
                      + "userComment: " + nullOrEmptyToNone(userComment);
-    // "comments" seems to be the only viable place we can put extra info.
+    // "comments" seems to be the only viable place where we can put extra info.
     parameters.put("comments", extraInfo);
 
     try {
