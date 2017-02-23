@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.eclipse.util;
 
+import org.osgi.framework.FrameworkUtil;
+
 /**
  * Provides generic information about the plug-in, such as a name to be used for usage
  * reporting and the current version, etc.
@@ -30,7 +32,6 @@ public class CloudToolsInfo {
   public static final String USER_AGENT = METRICS_NAME + "/" + getToolsVersion();
 
   public static String getToolsVersion() {
-    return "0.1.0.qualifier";
-    //return FrameworkUtil.getBundle(CloudToolsInfo.class).getVersion().toString();
+    return FrameworkUtil.getBundle(CloudToolsInfo.class).getVersion().toString();
   }
 }
