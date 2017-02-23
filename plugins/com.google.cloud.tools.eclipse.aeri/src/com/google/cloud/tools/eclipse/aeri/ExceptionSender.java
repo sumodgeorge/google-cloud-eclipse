@@ -31,12 +31,17 @@ public class ExceptionSender {
 
   private static final Logger logger = Logger.getLogger(ExceptionSender.class.getName());
 
+  private static final String REPORT_URL = "https://clients2.google.com/cr/report";
+
+  private static final String NONE_MARKER = "__NONE__";
+
   private final String endpointUrl;
 
   ExceptionSender() {
-    endpointUrl = "https://clients2.google.com/cr/staging_report";
+    this(REPORT_URL);
   }
 
+  @VisibleForTesting
   ExceptionSender(String endpointUrl) {
     this.endpointUrl = endpointUrl;
   }
@@ -48,11 +53,11 @@ public class ExceptionSender {
     parameters.put("version", CloudToolsInfo.getToolsVersion());
     parameters.put("exception_info", formatStacktrace(exception));
 
-    String extraInfo = "eclipseBuildId: " + handleNullOrEmpty(eclipseBuildId) + "\n"
-                     + "javaVersion: " + handleNullOrEmpty(javaVersion) + "\n"
-                     + "os: " + os + " " + handleNullOrEmpty(osVersion) + "\n"
-                     + "userSeverity: " + handleNullOrEmpty(userSeverity) + "\n"
-                     + "userComment: " + handleNullOrEmpty(userComment);
+    String extraInfo = "eclipseBuildId: " + nullOrEmptyToNone(eclipseBuildId) + "\n"
+                     + "javaVersion: " + nullOrEmptyToNone(javaVersion) + "\n"
+                     + "os: " + os + " " + nullOrEmptyToNone(osVersion) + "\n"
+                     + "userSeverity: " + nullOrEmptyToNone(userSeverity) + "\n"
+                     + "userComment: " + nullOrEmptyToNone(userComment);
     // "comments" seems to be the only viable place we can put extra info.
     parameters.put("comments", extraInfo);
 
@@ -69,9 +74,9 @@ public class ExceptionSender {
     }
   }
 
-  private static String handleNullOrEmpty(String string) {
+  private static String nullOrEmptyToNone(String string) {
     if (string == null || string.trim().isEmpty()) {
-      return "__NONE__";
+      return NONE_MARKER;
     }
     return string;
   }
@@ -80,7 +85,7 @@ public class ExceptionSender {
   @VisibleForTesting
   static String formatStacktrace(IThrowable exception) {
     if (exception == null) {
-      return "__NONE__";
+      return NONE_MARKER;
     }
 
     // We need this manual formatting because exception of type "Exception" isn't anonymized.

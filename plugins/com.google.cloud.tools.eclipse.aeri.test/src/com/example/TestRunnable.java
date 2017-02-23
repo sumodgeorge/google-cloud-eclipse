@@ -16,16 +16,21 @@
 
 package com.example;
 
-/**
- * Simple runnable that creates an Exception instance. Required so there are no
- * com.google.cloud.tools.* classes on the exception's stacktrace.
- */
+// Simple runnable that creates an Exception instance. Intention is to create a stack trace that
+// does not have entries with "com.google.cloud.tools.*" packages.
 public class TestRunnable implements Runnable {
   public Throwable exception;
 
   @Override
   public void run() {
-    exception = new NullPointerException("TESTING");
+    firstStack();
   }
 
+  private void firstStack() {
+    secondStack();
+  }
+
+  private void secondStack() {
+    exception = new NullPointerException("TESTING");
+  }
 }
