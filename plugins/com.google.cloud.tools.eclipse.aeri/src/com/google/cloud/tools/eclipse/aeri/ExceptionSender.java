@@ -58,6 +58,8 @@ public class ExceptionSender {
     this.endpointUrl = endpointUrl;
   }
 
+  // We accept AERI's "IThrowable" instead of standard "Throwable", because AERI's version takes
+  // anonymization (if done) into account.
   void sendException(IThrowable exception, String eclipseBuildId, String javaVersion,
       String os, String osVersion, String userSeverity, String userComment) {
     Map<String, String> parameters = new HashMap<>();
@@ -93,14 +95,14 @@ public class ExceptionSender {
     return string;
   }
 
-  /** Format the modeled stack trace. */
+  // Unfortunately, "IThrowable" doesn't have "Throwable.printStackTrace(...)" equivalent,
+  // so we need to implement it ourselves.
   @VisibleForTesting
   static String formatStackTrace(IThrowable exception) {
     if (exception == null) {
       return NONE_MARKER;
     }
 
-    // We need this manual formatting because exception of type "Exception" isn't anonymized.
     StringBuilder trace =
         new StringBuilder(exception.getClassName() + ": " + exception.getMessage());
     for (IStackTraceElement frame : exception.getStackTrace()) {
