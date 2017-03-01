@@ -81,7 +81,7 @@ public class ExceptionSender {
           + "&version=" + CloudToolsInfo.getToolsVersion();
       int code = HttpUtil.sendPostMultipart(endpointUrl + urlParameters, parameters);
       if (code != HttpURLConnection.HTTP_OK) {
-        logger.log(Level.WARNING, "Failed to send exception report. HTTP response code: " + code);
+        logger.log(Level.SEVERE, "Failed to send exception report. HTTP response code: " + code);
       }
     } catch (IOException ex) {
       logger.log(Level.WARNING, "Failed to send exception report.", ex);
