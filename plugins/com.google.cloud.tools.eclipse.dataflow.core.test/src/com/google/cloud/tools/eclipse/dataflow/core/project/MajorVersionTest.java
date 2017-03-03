@@ -49,35 +49,35 @@ public class MajorVersionTest {
     return Arrays.asList(MajorVersion.values());
   }
 
-  private final MajorVersion mv;
-  public MajorVersionTest(MajorVersion mv) {
-    this.mv = mv;
+  private final MajorVersion majorVersion;
+  public MajorVersionTest(MajorVersion majorVersion) {
+    this.majorVersion = majorVersion;
   }
 
   @Test
   public void testTruncatedVersionAtBeginningInternallyBackwardsCompatible() {
-    assumeTrue(mv.hasStableApi());
+    assumeTrue(majorVersion.hasStableApi());
     assertEquals(
-        mv.getVersionRange(),
-        mv.getTruncatedVersionRange(mv.getInitialVersion()));
+        majorVersion.getVersionRange(),
+        majorVersion.getTruncatedVersionRange(majorVersion.getInitialVersion()));
   }
 
   @Test
   public void testTruncatedVersionAtBeginningInternallyBackwardsIncompatible() throws Exception {
-    assumeFalse(mv.hasStableApi());
+    assumeFalse(majorVersion.hasStableApi());
     assertEquals(
-        VersionRange.createFromVersion(mv.getInitialVersion().toString()),
-        mv.getTruncatedVersionRange(mv.getInitialVersion()));
+        VersionRange.createFromVersion(majorVersion.getInitialVersion().toString()),
+        majorVersion.getTruncatedVersionRange(majorVersion.getInitialVersion()));
   }
 
   @Test
   public void testTruncatedVersionAtEnd() {
-    assumeFalse(mv.getMaxVersion().toString().trim().isEmpty());
+    assumeFalse(majorVersion.getMaxVersion().toString().trim().isEmpty());
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("it does not contain");
-    thrown.expectMessage(mv.getMaxVersion().toString());
-    thrown.expectMessage(mv.getVersionRange().toString());
-    mv.getTruncatedVersionRange(mv.getMaxVersion());
+    thrown.expectMessage(majorVersion.getMaxVersion().toString());
+    thrown.expectMessage(majorVersion.getVersionRange().toString());
+    majorVersion.getTruncatedVersionRange(majorVersion.getMaxVersion());
   }
 
   @Test
@@ -86,8 +86,8 @@ public class MajorVersionTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("it does not contain");
     thrown.expectMessage(version);
-    thrown.expectMessage(mv.getVersionRange().toString());
-    mv.getTruncatedVersionRange(new DefaultArtifactVersion(version));
+    thrown.expectMessage(majorVersion.getVersionRange().toString());
+    majorVersion.getTruncatedVersionRange(new DefaultArtifactVersion(version));
   }
 
   // This runs three times even though it doesn't use the parameters
@@ -109,36 +109,36 @@ public class MajorVersionTest {
   public void testInitialMaxVersionRange() throws Exception {
     VersionRange expectedRange =
         VersionRange.createFromVersionSpec(
-            String.format("[%s, %s)", mv.getInitialVersion(), mv.getMaxVersion()));
+            String.format("[%s, %s)", majorVersion.getInitialVersion(), majorVersion.getMaxVersion()));
     assertEquals(
         "Major Versions should produce a version specification from "
             + "their initial version (inclusive) to their max version (exclusive)",
         expectedRange,
-        mv.getVersionRange());
+        majorVersion.getVersionRange());
   }
 
   @Test
   public void testVersionRangeFromSpec() throws Exception {
-    VersionRange versionRange = mv.getVersionRange();
+    VersionRange versionRange = majorVersion.getVersionRange();
     Restriction restriction = Iterables.getOnlyElement(versionRange.getRestrictions());
-    assertEquals(mv.getVersionRange(), mv.getVersionRange());
+    assertEquals(majorVersion.getVersionRange(), majorVersion.getVersionRange());
 
     assertTrue(restriction.isLowerBoundInclusive());
-    assertEquals(mv.getInitialVersion(), restriction.getLowerBound());
+    assertEquals(majorVersion.getInitialVersion(), restriction.getLowerBound());
 
     assertFalse(restriction.isUpperBoundInclusive());
-    if (mv.getMaxVersion().toString().trim().isEmpty()) {
+    if (majorVersion.getMaxVersion().toString().trim().isEmpty()) {
       assertNull(
           "No Upper Bound should be specified if the max version is empty",
           restriction.getUpperBound());
     } else {
-      assertEquals(mv.getMaxVersion(), restriction.getUpperBound());
+      assertEquals(majorVersion.getMaxVersion(), restriction.getUpperBound());
     }
   }
 
   @Test
   public void testTruncateVersionRange() {
-    ArtifactVersion initialVersion = mv.getInitialVersion();
+    ArtifactVersion initialVersion = majorVersion.getInitialVersion();
     ArtifactVersion newStart =
         new DefaultArtifactVersion(
             String.format(
@@ -146,9 +146,9 @@ public class MajorVersionTest {
                 initialVersion.getMajorVersion(),
                 initialVersion.getMajorVersion(),
                 initialVersion.getIncrementalVersion() + 5));
-    assumeTrue(mv.getMaxVersion().compareTo(newStart) > 0);
-    VersionRange updatedRange = MajorVersion.truncateAtLatest(newStart, mv.getVersionRange());
-    assertFalse(updatedRange.containsVersion(mv.getInitialVersion()));
+    assumeTrue(majorVersion.getMaxVersion().compareTo(newStart) > 0);
+    VersionRange updatedRange = MajorVersion.truncateAtLatest(newStart, majorVersion.getVersionRange());
+    assertFalse(updatedRange.containsVersion(majorVersion.getInitialVersion()));
     ArtifactVersion afterStart =
         new DefaultArtifactVersion(
             String.format(
@@ -156,7 +156,7 @@ public class MajorVersionTest {
                 initialVersion.getMajorVersion(),
                 initialVersion.getMajorVersion(),
                 initialVersion.getIncrementalVersion() + 6));
-    if (mv.hasStableApi()) {
+    if (majorVersion.hasStableApi()) {
       assertTrue(updatedRange.containsVersion(afterStart));
     } else {
       assertFalse(updatedRange.containsVersion(afterStart));
@@ -165,36 +165,36 @@ public class MajorVersionTest {
 
   @Test
   public void testTruncateVersionRangeNotInRange() {
-    assumeTrue(!mv.getMaxVersion().toString().isEmpty());
+    assumeTrue(!majorVersion.getMaxVersion().toString().isEmpty());
     thrown.expect(IllegalArgumentException.class);
-    MajorVersion.truncateAtLatest(mv.getMaxVersion(), mv.getVersionRange());
+    MajorVersion.truncateAtLatest(majorVersion.getMaxVersion(), majorVersion.getVersionRange());
   }
 
   @Test
   public void testStableVersionGetStableSelf() {
-    assumeTrue(mv.hasStableApi());
-    assertEquals(mv, mv.getStableVersion());
+    assumeTrue(majorVersion.hasStableApi());
+    assertEquals(majorVersion, majorVersion.getStableVersion());
   }
 
   @Test
   public void testUnstableVersionGetStableStartsAtMaxVersion() {
-    assumeFalse(mv.hasStableApi());
-    assumeFalse(mv.getMaxVersion().toString().isEmpty());
+    assumeFalse(majorVersion.hasStableApi());
+    assumeFalse(majorVersion.getMaxVersion().toString().isEmpty());
     assertEquals(
         "The Stable Version Range for a version without a stable API should "
             + "start at the end of the Unstable Version Range",
-        mv.getStableVersion().getInitialVersion(),
-        mv.getMaxVersion());
+        majorVersion.getStableVersion().getInitialVersion(),
+        majorVersion.getMaxVersion());
   }
 
   @Test
   public void testStableApiOrdering() {
-    assumeFalse(mv.hasStableApi());
+    assumeFalse(majorVersion.hasStableApi());
     try {
-      MajorVersion stable = mv.getStableVersion();
+      MajorVersion stable = majorVersion.getStableVersion();
       assertTrue(
           "A version that is not stable should always precede the stable version that replaces it",
-          mv.compareTo(stable) < 0);
+          majorVersion.compareTo(stable) < 0);
     } catch (IllegalArgumentException ignored) {
       // Not all Major Versions have a stable version, even if they also do not have a stable API.
       // This test only demonstrates the relation between versions without a stable API that have a

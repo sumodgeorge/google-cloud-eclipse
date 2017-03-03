@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.google.cloud.tools.eclipse.dataflow.core.launcher.options;
 
 import static org.junit.Assert.assertEquals;
@@ -182,6 +183,10 @@ public class TypeHierarchyPipelineOptionsHierarchyTest {
   /**
    * Test that sortedHierarchy returns a topologically sorted list of {@link PipelineOptionsType}
    * instances.
+   *
+   * <p>The order in which Pipeline Options Types are returned is such that for any
+   * {@link PipelineOptionsType}, that type precedes any {@link PipelineOptionsType} that contains
+   * it.
    */
   @Test
   public void testGetOptionsHierarchyReturnsOptionsInHierarchicalOrder() throws Exception {

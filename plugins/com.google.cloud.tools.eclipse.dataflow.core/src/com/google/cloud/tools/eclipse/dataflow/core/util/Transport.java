@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.google.cloud.tools.eclipse.dataflow.core.util;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;

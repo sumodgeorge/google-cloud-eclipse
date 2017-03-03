@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.google.cloud.tools.eclipse.dataflow.core.launcher.options;
 
 import com.google.cloud.tools.eclipse.dataflow.core.DataflowCorePlugin;
@@ -21,12 +22,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeHierarchy;
-import org.eclipse.jdt.core.JavaModelException;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +33,12 @@ import java.util.NavigableMap;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * A {@link PipelineOptionsHierarchy} that uses an {@code ITypeHierarchy} as the source of the
@@ -69,7 +70,7 @@ public class JavaProjectPipelineOptionsHierarchy implements PipelineOptionsHiera
     if (rootType == null || !rootType.exists()) {
       throw new IllegalArgumentException(
           "Tried to create a TypeHierarchyPipelineOptionsHierarchy for a Java Project "
-          + project.getElementName() + " where no PipelineOptions type exists");
+              + "where no PipelineOptions type exists");
     }
 
     // Flatten the class hierarchy, recording all the classes present
@@ -83,12 +84,11 @@ public class JavaProjectPipelineOptionsHierarchy implements PipelineOptionsHiera
 
   @Override
   public PipelineOptionsType getPipelineOptionsType(String typeName) {
-    IType namedType;
     try {
-      namedType = project.findType(typeName);
+      IType namedType = project.findType(typeName);
       if (namedType == null) {
         DataflowCorePlugin.logWarning(
-            "Pipeline Options Type %s not found in PipelineOptions type hiearchy in project %s; "
+            "Pipeline Options Type %s not found in PipelineOptions type hierarchy in project %s; "
                 + "Hierarchy %s",
             typeName,
             project.getElementName(),

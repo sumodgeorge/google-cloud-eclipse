@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.google.cloud.tools.eclipse.dataflow.core.internal.proxy;
 
 import com.google.api.services.storage.model.Bucket;
@@ -20,7 +21,7 @@ import com.google.api.services.storage.model.Bucket;
 /**
  * A proxy class for {@code Bucket}.
  *
- * <p>Used to hide the fact that the underlying {@code Bucket} implementation can be repackaged so
+ * <p>Hides that the underlying {@code Bucket} implementation can be repackaged so
  * unit tests in another module can mock out the service calls appropriately.
  */
 public class BucketProxy {

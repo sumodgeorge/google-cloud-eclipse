@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.google.cloud.tools.eclipse.dataflow.core.project;
 
 import static org.junit.Assert.assertEquals;
@@ -168,10 +169,10 @@ public class DataflowMavenModelTest {
     Document simpleModelDocument = dbf.newDocumentBuilder().parse(
         new ByteArrayInputStream(simplifiedModel.getBytes()));
 
-    XPath xpath = XPathFactory.newInstance().newXPath();
-    xpath.setNamespaceContext(DataflowMavenModelFactory.POM_NS_CONTEXT);
+    XPath realXpath = XPathFactory.newInstance().newXPath();
+    realXpath.setNamespaceContext(DataflowMavenModelFactory.POM_NS_CONTEXT);
     NodeList matchingNodes =
-        DataflowMavenModel.getMatchingNodes(xpath,
+        DataflowMavenModel.getMatchingNodes(realXpath,
             simpleModelDocument, DataflowMavenModel.DATAFLOW_VERSION_XPATH_EXPR);
 
     assertEquals(1, matchingNodes.getLength());
