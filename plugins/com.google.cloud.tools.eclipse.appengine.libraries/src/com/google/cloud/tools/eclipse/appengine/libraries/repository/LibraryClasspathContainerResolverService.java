@@ -129,7 +129,7 @@ public class LibraryClasspathContainerResolverService
               resolveLibraryFiles(javaProject, containerPath, library, sourceAttacherJobs, monitor);
           serializer.saveContainer(javaProject, container);
         } finally {
-          Job.getJobManager().endRule(javaProject.getProject());
+          Job.getJobManager().endRule(javaProject.getSchedulingRule());
         }
         // setClasspathContainer must be executed outside of the project rule
         JavaCore.setClasspathContainer(containerPath,
