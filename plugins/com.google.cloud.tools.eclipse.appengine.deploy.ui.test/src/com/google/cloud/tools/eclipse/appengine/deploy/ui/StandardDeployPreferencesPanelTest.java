@@ -17,6 +17,7 @@
 package com.google.cloud.tools.eclipse.appengine.deploy.ui;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -35,8 +36,10 @@ import com.google.cloud.tools.eclipse.projectselector.ProjectSelector;
 import com.google.cloud.tools.eclipse.projectselector.model.GcpProject;
 import com.google.cloud.tools.eclipse.test.util.ui.ShellTestResource;
 import com.google.cloud.tools.login.Account;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Queue;
 import org.eclipse.core.databinding.ValidationStatusProvider;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
@@ -44,8 +47,10 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swtbot.swt.finder.widgets.SWTBotCheckBox;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,6 +122,61 @@ public class StandardDeployPreferencesPanelTest {
     assertThat(status.getMessage(), is("Select an account."));
   }
 
+  private static Button getButtonWithText(Composite parent, String text) {
+    for (Control control : parent.getChildren()) {
+      if (control instanceof Button) {
+        Button button = (Button) control;
+        if (button.getText().equals(text)) {
+          return button;
+        }
+      }
+    }
+    return null;
+  }
+
+  // https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues/1229
+  @Test
+  public void testUncheckStopPreviousVersionButtonWhenDisabled() {
+    StandardDeployPreferencesPanel panel = new StandardDeployPreferencesPanel(
+        parent, project, loginService, layoutChangedHandler, true, projectRepository);
+
+    Button promoteButton =
+        getButtonWithText(panel, "Promote the deployed version to receive all traffic");
+    Button stopButton = getButtonWithText(panel, "Stop previous version");
+    SWTBotCheckBox promote = new SWTBotCheckBox(promoteButton);
+    SWTBotCheckBox stop = new SWTBotCheckBox(stopButton);
+
+    // Initially, everything is checked and enabled.
+    assertTrue(promoteButton.getSelection());
+    assertTrue(stopButton.getSelection());
+    assertTrue(stopButton.getEnabled());
+
+    promote.click();
+    assertFalse(promoteButton.getSelection());
+    assertFalse(stopButton.getSelection());
+    assertFalse(stopButton.getEnabled());
+
+    promote.click();
+    assertTrue(promoteButton.getSelection());
+    assertTrue(stopButton.getSelection());
+    assertTrue(stopButton.getEnabled());
+
+    stop.click();
+    assertTrue(promoteButton.getSelection());
+    assertFalse(stopButton.getSelection());
+    assertTrue(stopButton.getEnabled());
+
+    promote.click();
+    assertFalse(promoteButton.getSelection());
+    assertFalse(stopButton.getSelection());
+    assertFalse(stopButton.getEnabled());
+
+    promote.click();
+    assertTrue(promoteButton.getSelection());
+    assertFalse(stopButton.getSelection());
+    assertTrue(stopButton.getEnabled());
+  }
+
   @Test
   public void testProjectSavedInPreferencesSelected() throws ProjectRepositoryException {
     IEclipsePreferences node =
@@ -128,13 +188,17 @@ public class StandardDeployPreferencesPanelTest {
     StandardDeployPreferencesPanel deployPanel =
         new StandardDeployPreferencesPanel(parent, project, loginService, layoutChangedHandler,
                                            true, projectRepository);
-    for (Control control : deployPanel.getChildren()) {
+    Queue<Control> children = new ArrayDeque<>(Arrays.asList(deployPanel.getChildren()));
+    while (!children.isEmpty()) {
+      Control control = children.poll();
       if (control instanceof ProjectSelector) {
         ProjectSelector projectSelector = (ProjectSelector) control;
         IStructuredSelection selection = projectSelector.getViewer().getStructuredSelection();
         assertThat(selection.size(), is(1));
         assertThat(((GcpProject) selection.getFirstElement()).getId(), is("projectId1"));
         return;
+      } else if (control instanceof Composite) {
+        children.addAll(Arrays.asList(((Composite) control).getChildren()));
       }
     };
     fail("Did not find ProjectSelector widget");
@@ -170,5 +234,4 @@ public class StandardDeployPreferencesPanelTest {
     }
     return status;
   }
-
 }
