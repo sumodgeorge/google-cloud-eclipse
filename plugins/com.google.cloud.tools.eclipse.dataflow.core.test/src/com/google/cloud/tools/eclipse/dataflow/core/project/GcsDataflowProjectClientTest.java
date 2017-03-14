@@ -22,9 +22,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.BucketProxy;
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.BucketsProxy;
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.StorageProxy;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.Buckets;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,48 +51,13 @@ public class GcsDataflowProjectClientTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  @Mock
-  private StorageProxy storage;
-
-  @Mock
-  private BucketsProxy buckets;
-
   private GcsDataflowProjectClient client;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
 
-    client = new GcsDataflowProjectClient(storage);
-  }
-
-  @Test
-  public void testGetStagingLocationsCallsGcsAndReturnsBucketNames() throws Exception {
-    when(storage.listBuckets(PROJECT)).thenReturn(buckets);
-    BucketProxy fooB = bucket("foo");
-    BucketProxy barB = bucket("bar");
-    BucketProxy bazB = bucket("baz");
-    BucketProxy quuxB = bucket("quux");
-    List<BucketProxy> resultBuckets = Arrays.asList(fooB, barB, bazB, quuxB);
-    when(buckets.getItems()).thenReturn(resultBuckets);
-
-    Set<String> stagingLocations = client.getPotentialStagingLocations(PROJECT);
-
-    Set<String> expectedResult = new HashSet<>();
-    expectedResult.addAll(Arrays.asList("gs://foo", "gs://bar", "gs://baz", "gs://quux"));
-
-    assertEquals(expectedResult, stagingLocations);
-  }
-
-  @Test
-  public void testGetStagingLocationsWithExceptionRethrows() throws Exception {
-    doThrow(IOException.class).when(storage).listBuckets(PROJECT);
-
-    thrown.expect(IOException.class);
-
-    Set<String> stagingLocations = client.getPotentialStagingLocations(PROJECT);
-
-    assertTrue(stagingLocations.isEmpty());
+    client = new GcsDataflowProjectClient(null);
   }
 
   @Test
@@ -123,8 +88,8 @@ public class GcsDataflowProjectClientTest {
     assertEquals("gs://foo-bar", client.toGcsLocationUri(location));
   }
 
-  private BucketProxy bucket(String bucketName) {
-    BucketProxy result = mock(BucketProxy.class);
+  private Bucket bucket(String bucketName) {
+    Bucket result = mock(Bucket.class);
     when(result.getName()).thenReturn(bucketName);
     return result;
   }

@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.TreeMap;
-import javax.annotation.Nullable;
 
 /**
  * {@link DataflowDependencyManager} provides {@code Dependency} instances for Dataflow and the
@@ -160,7 +159,6 @@ public class DataflowDependencyManager {
     }
   }
 
-  @Nullable
   private Model getModelFromProject(IProject project) {
     IMavenProjectFacade facade = mavenProjectRegistry.getProject(project);
     if (facade != null) {

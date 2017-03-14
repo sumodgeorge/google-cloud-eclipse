@@ -40,7 +40,6 @@ import java.net.URL;
 import java.util.NavigableSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -147,19 +146,28 @@ public class DataflowArtifactRetriever {
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
 
-  @Nullable
+  /**
+   * Returns the latest published SDK Version in the version range, or null if there is no such
+   * version.
+   */
   public ArtifactVersion getLatestSdkVersion(VersionRange versionRange) {
     return getLatestIncrementalVersion(DATAFLOW_SDK_ARTIFACT, versionRange);
   }
 
-  @Nullable
+  /**
+   * Returns the latest published Archetype Version in the version range, or null if there is no
+   * such version.
+   */
   public ArtifactVersion getLatestArchetypeVersion(
       Template template, MajorVersion majorVersion) {
     checkArgument(template.getSdkVersions().contains(majorVersion));
     return getLatestIncrementalVersion(template.getArchetype(), majorVersion.getVersionRange());
   }
 
-  @Nullable
+  /**
+   * Returns the latest Version of the specified Artifact in the version range, or null if there is
+   * no such version.
+   */
   private ArtifactVersion getLatestIncrementalVersion(
       String artifactId, VersionRange versionRange) {
     try {
@@ -185,7 +193,6 @@ public class DataflowArtifactRetriever {
     return getLatestInRange(versionRange, KNOWN_VERSIONS);
   }
 
-  @Nullable
   private ArtifactVersion getLatestInRange(
       VersionRange versionRange, NavigableSet<ArtifactVersion> allVersions) {
     for (ArtifactVersion version : allVersions.descendingSet()) {

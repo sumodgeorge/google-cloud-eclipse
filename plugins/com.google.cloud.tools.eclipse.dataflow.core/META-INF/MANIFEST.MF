@@ -5,8 +5,7 @@ Bundle-SymbolicName: com.google.cloud.tools.eclipse.dataflow.core;singleton:=tru
 Bundle-Version: 0.1.0.qualifier
 Bundle-Activator: com.google.cloud.tools.eclipse.dataflow.core.DataflowCorePlugin
 Bundle-Vendor: Google, Inc.
-Bundle-ClassPath: .,
- lib/jsr305.jar
+Bundle-ClassPath: .
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: com.google.cloud.tools.eclipse.dataflow.core.launcher,
@@ -14,7 +13,6 @@ Export-Package: com.google.cloud.tools.eclipse.dataflow.core.launcher,
  com.google.cloud.tools.eclipse.dataflow.core.natures,
  com.google.cloud.tools.eclipse.dataflow.core.preferences,
  com.google.cloud.tools.eclipse.dataflow.core.project,
- com.google.cloud.tools.eclipse.dataflow.core.proxy,
  com.google.cloud.tools.eclipse.dataflow.core.util;x-friends:=com.google.cloud.tools.eclipse.dataflow.ui
 Import-Package: org.eclipse.core.expressions,
  org.eclipse.core.filesystem,

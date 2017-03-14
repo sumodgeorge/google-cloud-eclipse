@@ -16,11 +16,10 @@
 
 package com.google.cloud.tools.eclipse.dataflow.core.project;
 
+import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.Buckets;
 import com.google.cloud.tools.eclipse.dataflow.core.DataflowCorePlugin;
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.BucketProxy;
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.BucketsProxy;
-import com.google.cloud.tools.eclipse.dataflow.core.internal.proxy.StorageProxy;
 import com.google.cloud.tools.eclipse.dataflow.core.util.CouldNotCreateCredentialsException;
 import com.google.cloud.tools.eclipse.dataflow.core.util.Transport;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,15 +40,15 @@ import java.util.TreeSet;
 public class GcsDataflowProjectClient {
   private static final String GCS_PREFIX = "gs://";
 
-  private final StorageProxy gcsClient;
+  private final Storage gcsClient;
 
   public static GcsDataflowProjectClient createWithDefaultClient()
       throws CouldNotCreateCredentialsException {
-    return new GcsDataflowProjectClient(StorageProxy.of(Transport.newStorageClient().build()));
+    return new GcsDataflowProjectClient(Transport.newStorageClient().build());
   }
 
   @VisibleForTesting
-  GcsDataflowProjectClient(StorageProxy gcsClient) {
+  GcsDataflowProjectClient(Storage gcsClient) {
     this.gcsClient = gcsClient;
   }
 
@@ -58,9 +57,9 @@ public class GcsDataflowProjectClient {
    */
   public SortedSet<String> getPotentialStagingLocations(String projectName) throws IOException {
     SortedSet<String> result = new TreeSet<>();
-    BucketsProxy buckets = gcsClient.listBuckets(projectName);
-    List<BucketProxy> bucketList = buckets.getItems();
-    for (BucketProxy bucket : bucketList) {
+    Buckets buckets = gcsClient.buckets().list(projectName).execute();
+    List<Bucket> bucketList = buckets.getItems();
+    for (Bucket bucket : bucketList) {
       result.add(GCS_PREFIX + bucket.getName());
     }
     return result;
@@ -89,7 +88,7 @@ public class GcsDataflowProjectClient {
       monitor.newChild(1);
       Bucket newBucket = new Bucket();
       newBucket.setName(bucketName);
-      gcsClient.insertBucket(projectName, newBucket);
+      gcsClient.buckets().insert(projectName, newBucket).execute();
     } catch (IOException e) {
       return new StagingLocationVerificationResult(e.getMessage(), false);
     } finally {
@@ -129,7 +128,7 @@ public class GcsDataflowProjectClient {
    */
   public boolean verifyLocationIsAccessible(String stagingLocation) throws IOException {
     String bucketName = toGcsBucketName(stagingLocation);
-    gcsClient.getBucket(bucketName);
+    gcsClient.buckets().get(bucketName).execute();
     return true;
   }
 
