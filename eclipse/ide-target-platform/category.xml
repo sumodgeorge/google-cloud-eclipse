@@ -23,6 +23,7 @@
    <bundle id="org.eclipse.jetty.servlet" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.server" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.util" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.tasks.bugs" version="0.0.0"/>
    <bundle id="org.hamcrest" version="1.1.0.v20090501071000"/>
    <bundle id="org.mortbay.jetty.server" version="6.1.26"/>
    <bundle id="org.mortbay.jetty.util" version="6.1.26"/>
