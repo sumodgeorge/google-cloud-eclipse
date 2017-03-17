@@ -6,4 +6,45 @@
         configId="org.eclipse.ui.intro.universalConfig"
         content="intro/cloud-tools-for-eclipse.xml" />
   </extension>
+
+<extension point="org.eclipse.mylyn.tasks.bugs.support">
+  <!-- category for grouping providers -->
+  <category
+    description="Community supported open source projects"
+    id="org.eclipse.mylyn.tasks.bugs.openSource" name="Open Source Community"
+    weight="900" />
+
+  <!-- provider that specifies branding -->
+  <provider
+    categoryId="org.eclipse.mylyn.tasks.bugs.openSource"
+    description="Cloud Tools for Eclipse bug tracker"
+    icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gcp-32x32.png"
+    id="com.google.cloud.tools.eclipse"
+    name="Google Inc."
+    url="https://www.google.com/"/>
+
+  <!-- mapping for all org.eclipse.* bundles -->
+  <mapping
+        namespace="com.google.cloud.tools.eclipse"
+        productId="com.google.cloud.tools.eclipse.dist">
+    <repository kind="bugzilla" url="https://bugs.eclipse.org/bugs"/>
+  </mapping>
+  <!-- supported product -->
+  <product
+        icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gcp-32x32.png"
+        id="com.google.cloud.tools.eclipse.dist"
+        pluginId="com.google.cloud.tools.eclipse.appengine.ui"
+        providerId="com.google.cloud.tools.eclipse"
+        url="https://www.google.com/"/>
+  <!--product
+        id="com.google.cloud.tools.eclipse.dist"
+        providerId="com.google.cloud.tools.eclipse"
+        url="https://www.google.com/"/-->
+  <mapping
+      namespace="com.google.cloud.tools.eclipse"
+      productId="com.google.cloud.tools.eclipse.dist">
+    <property name="product" value="App Engine"/>
+  </mapping>
+</extension>
+
 </plugin>
