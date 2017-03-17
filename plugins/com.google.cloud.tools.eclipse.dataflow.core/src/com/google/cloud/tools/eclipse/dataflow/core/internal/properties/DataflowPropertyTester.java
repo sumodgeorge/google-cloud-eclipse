@@ -35,10 +35,6 @@ public class DataflowPropertyTester extends PropertyTester {
   private static final String PROJECT_IS_NOT_DATAFLOW_PROJECT_PROPERTY =
       "projectIsNotDataflowProject";
 
-  public DataflowPropertyTester() {
-    super();
-  }
-
   @Override
   public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
     switch (property) {

@@ -81,9 +81,9 @@ public class DataflowDependencyManager {
     return artifactRetriever.getLatestSdkVersion(currentVersionRange);
   }
 
-  private static boolean isDataflowDependency(Dependency dep) {
-    return dep.getGroupId().equals(DataflowArtifactRetriever.DATAFLOW_GROUP_ID)
-        && dep.getArtifactId().equals(DataflowArtifactRetriever.DATAFLOW_SDK_ARTIFACT);
+  private static boolean isDataflowDependency(Dependency dependency) {
+    return dependency.getGroupId().equals(DataflowArtifactRetriever.DATAFLOW_GROUP_ID)
+        && dependency.getArtifactId().equals(DataflowArtifactRetriever.DATAFLOW_SDK_ARTIFACT);
   }
 
   /**

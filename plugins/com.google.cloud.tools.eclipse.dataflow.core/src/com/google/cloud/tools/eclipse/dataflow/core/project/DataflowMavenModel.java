@@ -167,6 +167,7 @@ public class DataflowMavenModel {
   /**
    * Sets the Dataflow Dependency of this model to the LATEST version value.
    */
+  @Deprecated
   public void trackDataflowDependency(@SuppressWarnings("unused") IProgressMonitor monitor)
       throws CoreException {
     try {

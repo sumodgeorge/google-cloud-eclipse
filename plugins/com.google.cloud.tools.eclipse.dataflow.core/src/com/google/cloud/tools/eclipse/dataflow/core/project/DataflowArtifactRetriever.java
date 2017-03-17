@@ -54,8 +54,11 @@ import javax.xml.xpath.XPathFactory;
  *
  * <p>The implementation of {@link DataflowArtifactRetriever} uses low-level URL and XPath APIs
  * rather than using the M2E plugin to work around shortcomings in the ability of M2E to query
- * Maven for available versions. The artifact retriever reads Maven Central metadata xml files to
- * retrieve available and latest versions.
+ * Maven for available versions. Additionally, M2E APIs are internal and unstable, and thus may
+ * change between versions.
+ *
+ * <p>The artifact retriever reads Maven Central metadata xml files to retrieve available and latest
+ * versions.
  */
 public class DataflowArtifactRetriever {
   /**

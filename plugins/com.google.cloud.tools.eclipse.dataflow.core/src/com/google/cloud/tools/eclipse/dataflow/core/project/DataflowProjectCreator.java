@@ -98,12 +98,12 @@ public class DataflowProjectCreator implements IRunnableWithProgress {
 
     private final String label;
     private final String archetype;
-    private final NavigableSet<MajorVersion> sdkVersions;
+    private final ImmutableSortedSet<MajorVersion> sdkVersions;
 
     Template(String label, String archetype, NavigableSet<MajorVersion> sdkVersions) {
       this.label = label;
       this.archetype = archetype;
-      this.sdkVersions = sdkVersions;
+      this.sdkVersions = ImmutableSortedSet.copyOf(sdkVersions);
     }
 
     public String getLabel() {
