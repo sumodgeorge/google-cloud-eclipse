@@ -18,7 +18,6 @@ package com.google.cloud.tools.eclipse.dataflow.core.preferences;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Retrieves preferences stored for the Dataflow plugin.
@@ -42,7 +41,7 @@ public interface DataflowPreferences {
   /**
    * All properties that can be used for defaulting options in a Pipeline Launch.
    */
-  Set<String> SUPPORTED_DEFAULT_PROPERTIES =
+  ImmutableSet<String> SUPPORTED_DEFAULT_PROPERTIES =
       ImmutableSet.of(PROJECT_PROPERTY, STAGING_LOCATION_PROPERTY, GCP_TEMP_LOCATION_PROPERTY);
 
   /**
