@@ -8,3 +8,4 @@ Bundle-Vendor: Google Inc.
 Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
+Import-Package: org.eclipse.core.runtime

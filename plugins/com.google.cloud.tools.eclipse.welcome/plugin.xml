@@ -27,7 +27,9 @@
   <mapping
         namespace="com.google.cloud.tools.eclipse"
         productId="com.google.cloud.tools.eclipse.bugs.support.product">
-    <repository kind="bugzilla" url="https://bugs.eclipse.org/bugs"/>
+    <!--property name="org.eclipse.mylyn.tasks.bugs.mappingComplete" value="ture"/-->
+    <property name="product" value="WTF"/>
+    <repository kind="myAwesomeConnectorKind" url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues"/>
   </mapping>
 
   <!-- supported product -->
@@ -37,16 +39,48 @@
         description="Public issue tracker on project repository"
         icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gcp-32x32.png"
         providerId="com.google.cloud.tools.eclipse.bugs.support.provider"
+        pluginId="com.google.cloud.tools.eclipse.welcome"
         url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues"/>
   <!--product
         id="com.google.cloud.tools.eclipse.dist"
         providerId="com.google.cloud.tools.eclipse"
         url="https://cloud.google.com/eclipse/docs/"/-->
-  <mapping
+  <!--mapping
       namespace="com.google.cloud.tools.eclipse"
       productId="com.google.cloud.tools.eclipse.bugs.support.product">
-    <property name="product" value="Cloud Tools for Eclipse"/>
-  </mapping>
+    <property name="product" value="WTF"/>
+  </mapping-->
+</extension>
+<!--extension id="org.eclipse.mylyn.trac.repository" name="Trac Repository" point="org.eclipse.mylyn.tasks.ui.repositories">
+<connectorCore class=" org.eclipse.mylyn.internal.trac.core.TracRepositoryConnector " id="trac" name="Trac Connector Core"/>
+<connectorUi brandingIcon="icons/eview16/trac-icon.gif" class="org.eclipse.mylyn.internal.trac.ui.TracConnectorUi" id="trac" name="Trac Connector UI" overlayIcon="icons/eview16/overlay-trac.gif"/>
+<taskListMigrator class="org.eclipse.mylyn.internal.trac.ui.TracTaskListMigrator ">
+</taskListMigrator>
+</extension>
+<extension point="org.eclipse.mylyn.tasks.core.templates">
+<repository addAutomatically="false" anonymous="true" label="Edgewall" repositoryKind="trac" urlRepository="http://trac.edgewall.org" version="TRAC_0_9"/>
+</extension-->
+
+<!--extension point="org.eclipse.mylyn.tasks.core.templates">
+<repository addAutomatically="true" anonymous="true" label="Edgewall" repositoryKind="myAwesomeConnectorKind"
+ urlRepository="http://trac.edgewall.org" version="TRAC_0_9"/>
+</extension>
+<extension id="some id" name="My Trac Repository" point="org.eclipse.mylyn.tasks.ui.repositories">
+  <connectorCore class="com.google.cloud.tools.eclipse.welcome.MyConnector" id="myAwesomeConnectorKind" name="My Awesome Connector Core"/>
+</extension-->
+
+<extension
+    id="com.google.cloud.tools.eclipse.bugs.support.repository"
+    name="My Repository"
+    point="org.eclipse.mylyn.tasks.core.repositories">
+  <connectorCore
+      id="com.google.cloud.tools.eclipse.bugs.support.repositoryConnector"
+      name="My Awesome Connector Core"
+      class="com.google.cloud.tools.eclipse.welcome.MyConnector"/>
+  <taskListMigrator
+      class="com.google.cloud.tools.eclipse.welcome.MyTaskListMigrator"/>
+  <repositoryMigrator
+      class="com.google.cloud.tools.eclipse.welcome.MyRepositoryMigrator"/>
 </extension>
 
 </plugin>
