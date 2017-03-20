@@ -26,7 +26,18 @@ location "http://download.eclipse.org/releases/mars/" {
 	org.eclipse.m2e.wtp.feature.feature.group
 	org.eclipse.m2e.wtp.sdk.feature.feature.group
 	org.eclipse.mylyn.commons.feature.group
+	org.eclipse.mylyn.commons.core
+	org.eclipse.mylyn.commons.core.source
+	org.eclipse.mylyn.commons.ui.source
 	org.eclipse.mylyn.tasks.bugs
+	org.eclipse.mylyn.tasks.bugs.source
+	org.eclipse.mylyn.tasks.core
+	org.eclipse.mylyn.tasks.core.source
+	org.eclipse.mylyn.tasks.ui.source
+	org.eclipse.mylyn.git.feature.group
+	org.eclipse.mylyn.git.core.source
+	org.eclipse.mylyn.git.ui.source
+	org.eclipse.mylyn.github.feature.feature.group
 	org.eclipse.jpt.jpa.feature.feature.group
 	org.eclipse.datatools.sdk.feature.feature.group
 	org.eclipse.swtbot.eclipse.feature.group

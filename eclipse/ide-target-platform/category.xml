@@ -8,6 +8,8 @@
    <feature id="org.eclipse.m2e.wtp.feature" version="0.0.0"/>
    <feature id="org.eclipse.m2e.wtp.sdk.feature" version="0.0.0"/>
    <feature id="org.eclipse.mylyn.commons" version="0.0.0"/>
+   <feature id="org.eclipse.mylyn.git" version="0.0.0"/>
+   <feature id="org.eclipse.mylyn.github.feature" version="0.0.0"/>
    <feature id="org.eclipse.jpt.jpa.feature" version="0.0.0"/>
    <feature id="org.eclipse.datatools.sdk.feature" version="0.0.0"/>
    <feature id="org.eclipse.swtbot.eclipse" version="0.0.0"/>
@@ -23,7 +25,16 @@
    <bundle id="org.eclipse.jetty.servlet" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.server" version="0.0.0"/>
    <bundle id="org.eclipse.jetty.util" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.commons.core" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.commons.core.source" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.commons.ui.source" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.git.core.source" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.git.ui.source" version="0.0.0"/>
    <bundle id="org.eclipse.mylyn.tasks.bugs" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.tasks.bugs.source" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.tasks.core" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.tasks.core.source" version="0.0.0"/>
+   <bundle id="org.eclipse.mylyn.tasks.ui.source" version="0.0.0"/>
    <bundle id="org.hamcrest" version="1.1.0.v20090501071000"/>
    <bundle id="org.mortbay.jetty.server" version="6.1.26"/>
    <bundle id="org.mortbay.jetty.util" version="6.1.26"/>

@@ -27,9 +27,10 @@
   <mapping
         namespace="com.google.cloud.tools.eclipse"
         productId="com.google.cloud.tools.eclipse.bugs.support.product">
-    <!--property name="org.eclipse.mylyn.tasks.bugs.mappingComplete" value="ture"/-->
     <property name="product" value="WTF"/>
-    <repository kind="myAwesomeConnectorKind" url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues"/>
+    <!--property name="org.eclipse.mylyn.tasks.bugs.mappingComplete" value="ture"/-->
+    <repository kind="mygithub" url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse"/>
+    <!--repository kind="myAwesomeConnectorKind" url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse"/-->
   </mapping>
 
   <!-- supported product -->
@@ -39,7 +40,6 @@
         description="Public issue tracker on project repository"
         icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gcp-32x32.png"
         providerId="com.google.cloud.tools.eclipse.bugs.support.provider"
-        pluginId="com.google.cloud.tools.eclipse.welcome"
         url="https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues"/>
   <!--product
         id="com.google.cloud.tools.eclipse.dist"
@@ -63,13 +63,35 @@
 
 <!--extension point="org.eclipse.mylyn.tasks.core.templates">
 <repository addAutomatically="true" anonymous="true" label="Edgewall" repositoryKind="myAwesomeConnectorKind"
- urlRepository="http://trac.edgewall.org" version="TRAC_0_9"/>
+ urlRepository="https://github.com/GoogleCloudPlatform/google-cloud-eclipse"/>
 </extension>
 <extension id="some id" name="My Trac Repository" point="org.eclipse.mylyn.tasks.ui.repositories">
   <connectorCore class="com.google.cloud.tools.eclipse.welcome.MyConnector" id="myAwesomeConnectorKind" name="My Awesome Connector Core"/>
 </extension-->
 
-<extension
+<!--extension point="org.eclipse.mylyn.tasks.core.templates">
+<repository
+    addAutomatically="false"
+    anonymous="true"
+    label="Cloud Tools for Eclipse GitHub issue tracker" repositoryKind="myAwesomeConnectorKind"
+    urlRepository="https://github.com/GoogleCloudPlatform/google-cloud-eclipse"/>
+</extension-->
+<extension point="org.eclipse.mylyn.tasks.core.templates">
+<repository
+    addAutomatically="true"
+    anonymous="true"
+    label="What the hell" repositoryKind="mygithub"
+    urlRepository="https://github.com/GoogleCloudPlatform/google-cloud-eclipse"/>
+</extension>
+
+   <extension
+         point="org.eclipse.mylyn.tasks.ui.repositories">
+      <connectorCore
+            class="com.google.cloud.tools.eclipse.welcome.MyIssueConnector">
+      </connectorCore>
+   </extension>
+
+<!--extension
     id="com.google.cloud.tools.eclipse.bugs.support.repository"
     name="My Repository"
     point="org.eclipse.mylyn.tasks.core.repositories">
@@ -81,6 +103,6 @@
       class="com.google.cloud.tools.eclipse.welcome.MyTaskListMigrator"/>
   <repositoryMigrator
       class="com.google.cloud.tools.eclipse.welcome.MyRepositoryMigrator"/>
-</extension>
+</extension-->
 
 </plugin>
