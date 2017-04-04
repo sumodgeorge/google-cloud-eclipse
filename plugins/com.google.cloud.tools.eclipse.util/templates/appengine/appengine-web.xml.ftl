@@ -3,5 +3,7 @@
 
   <threadsafe>true</threadsafe>
   <sessions-enabled>false</sessions-enabled>
+<#if service??>  <service>${service}</service>
+</#if>
 
 </appengine-web-app>

@@ -18,12 +18,13 @@ package com.google.cloud.tools.eclipse.sdk.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.eclipse.sdk.ui.preferences.CloudSdkPreferenceArea;
-
+import java.io.File;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -36,18 +37,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.File;
-
 /**
  * Tests for CloudSdkPreferenceArea.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CloudSdkPreferenceAreaTest {
+  
   @Mock
-  IPreferenceStore preferences;
+  private IPreferenceStore preferences;
 
-  CloudSdkPreferenceArea area;
-  Shell shell;
+  private CloudSdkPreferenceArea area;
+  private Shell shell;
 
   @After
   public void tearDown() {
@@ -70,13 +70,23 @@ public class CloudSdkPreferenceAreaTest {
   public void testInvalidPath() {
     when(preferences.getString(anyString())).thenReturn(null);
 
-    File[] roots = File.listRoots();
-    assertTrue("No root directory!?", roots.length > 0);
+    File root = null;
+    for (File directory : File.listRoots()) {
+      if (directory.exists()) {
+        // must check as roots includes A: on Windows for the floppy
+        root = directory;
+      }
+    }
     // root should exist but not contain a valid Cloud SDK
+    assertNotNull("No root directory!?", root);
+    assertTrue("Root doesn't exist!?", root.exists());
 
     show();
-    area.setStringValue(roots[0].getAbsolutePath());
+    area.setStringValue(root.getAbsolutePath());
     assertEquals(IStatus.WARNING, area.getStatus().getSeverity());
+    
+    area.setStringValue("");
+    assertEquals(IStatus.OK, area.getStatus().getSeverity());
   }
 
   private void show() {

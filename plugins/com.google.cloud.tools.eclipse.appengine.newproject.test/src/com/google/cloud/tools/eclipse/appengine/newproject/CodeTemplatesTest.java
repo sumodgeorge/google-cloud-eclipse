@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.eclipse.appengine.newproject;
 
+import com.google.cloud.tools.eclipse.util.templates.appengine.AppEngineTemplateUtility;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,11 +24,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -44,8 +43,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import com.google.cloud.tools.eclipse.util.templates.appengine.AppEngineTemplateUtility;
 
 public class CodeTemplatesTest {
 
@@ -72,41 +69,41 @@ public class CodeTemplatesTest {
     parent.delete(true, monitor);
     project.delete(true, monitor);
   }
-  
+
   @Test
-  public void testMaterialize() 
+  public void testMaterializeAppEngineStandardFiles()
       throws CoreException, ParserConfigurationException, SAXException, IOException {
-    AppEngineStandardProjectConfig config = new AppEngineStandardProjectConfig();
-    
-    CodeTemplates.materialize(project, config, monitor);
-    
+    AppEngineProjectConfig config = new AppEngineProjectConfig();
+    IFile mostImportant = CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
+    validateNonConfigFiles(mostImportant);
+    validateAppEngineWebXml();
+  }
+
+  @Test
+  public void testMaterializeAppEngineFlexFiles()
+      throws CoreException, ParserConfigurationException, SAXException, IOException {
+    AppEngineProjectConfig config = new AppEngineProjectConfig();
+    IFile mostImportant = CodeTemplates.materializeAppEngineFlexFiles(project, config, monitor);
+    validateNonConfigFiles(mostImportant);
+    validateAppYaml();
+  }
+
+  private void validateNonConfigFiles(IFile mostImportant)
+      throws ParserConfigurationException, SAXException, IOException, CoreException {
     IFolder src = project.getFolder("src");
     IFolder main = src.getFolder("main");
     IFolder java = main.getFolder("java");
     IFile servlet = java.getFile("HelloAppEngine.java");
     Assert.assertTrue(servlet.exists());
+    Assert.assertEquals(servlet, mostImportant);
     
     IFolder webapp = main.getFolder("webapp");
     IFolder webinf = webapp.getFolder("WEB-INF");
-    IFile appengineWebXml = webinf.getFile("appengine-web.xml");
-    Assert.assertTrue(appengineWebXml.exists());
-    Document doc = buildDocument(appengineWebXml);
-    NodeList threadsafeElements = doc.getDocumentElement().getElementsByTagName("threadsafe");
-    Assert.assertEquals("Must have exactly one threadsafe", 1, threadsafeElements.getLength());
-    String threadsafe = threadsafeElements.item(0).getTextContent();
-    Assert.assertEquals("true", threadsafe);
-    NodeList sessionsEnabledElements 
-        = doc.getDocumentElement().getElementsByTagName("sessions-enabled");
-    Assert.assertEquals("Must have exactly one sessions-enabled", 
-        1, sessionsEnabledElements.getLength());
-    String sessionsEnabled = sessionsEnabledElements.item(0).getTextContent();
-    Assert.assertEquals("false", sessionsEnabled);
-    
     IFile webXml = webinf.getFile("web.xml");
     Element root = buildDocument(webXml).getDocumentElement();
     Assert.assertEquals("web-app", root.getNodeName());
     // Oracle keeps changing the namespace URI in new versions of Java and JEE.
-    // This is the namespace URI that currently (Q2 2016) works in App Engine.
+    // This is the namespace URI that works in App Engine standard.
     Assert.assertEquals("http://java.sun.com/xml/ns/javaee", root.getNamespaceURI());
     Assert.assertEquals("2.5", root.getAttribute("version"));
     Element servletClass = (Element) root.getElementsByTagName("servlet-class").item(0);
@@ -122,6 +119,37 @@ public class CodeTemplatesTest {
     Assert.assertTrue(servletTest.exists());
     IFile mockServletResponse = testJava.getFile("MockHttpServletResponse.java");
     Assert.assertTrue(mockServletResponse.exists());
+  }
+
+  private void validateAppEngineWebXml()
+      throws ParserConfigurationException, SAXException, IOException, CoreException {
+    IFolder webinf = project.getFolder("src/main/webapp/WEB-INF");
+    IFile appengineWebXml = webinf.getFile("appengine-web.xml");
+    Assert.assertTrue(appengineWebXml.exists());
+    Document doc = buildDocument(appengineWebXml);
+    NodeList threadsafeElements = doc.getDocumentElement().getElementsByTagName("threadsafe");
+    Assert.assertEquals("Must have exactly one threadsafe", 1, threadsafeElements.getLength());
+    String threadsafe = threadsafeElements.item(0).getTextContent();
+    Assert.assertEquals("true", threadsafe);
+    NodeList sessionsEnabledElements
+    = doc.getDocumentElement().getElementsByTagName("sessions-enabled");
+    Assert.assertEquals("Must have exactly one sessions-enabled",
+        1, sessionsEnabledElements.getLength());
+    String sessionsEnabled = sessionsEnabledElements.item(0).getTextContent();
+    Assert.assertEquals("false", sessionsEnabled);
+  }
+
+  private void validateAppYaml() throws IOException, CoreException {
+    IFolder appengineFolder = project.getFolder("src/main/appengine");
+    Assert.assertTrue(appengineFolder.exists());
+    IFile appYaml = appengineFolder.getFile("app.yaml");
+    Assert.assertTrue(appYaml.exists());
+
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(appYaml.getContents(), StandardCharsets.UTF_8))) {
+      Assert.assertEquals("runtime: java", reader.readLine());
+      Assert.assertEquals("env: flex", reader.readLine());
+    }
   }
 
   private Document buildDocument(IFile appengineWebXml)
@@ -150,7 +178,7 @@ public class CodeTemplatesTest {
     values.put("package", "com.google.foo.bar");
     
     IFile child = CodeTemplates.createChildFile("HelloAppEngine.java", 
-        AppEngineTemplateUtility.HELLO_APPENGINE_TEMPLATE, parent, monitor, values);
+        AppEngineTemplateUtility.HELLO_APPENGINE_TEMPLATE, parent, values, monitor);
     Assert.assertTrue(child.exists());
     Assert.assertEquals("HelloAppEngine.java", child.getName());
     InputStream in = child.getContents(true);
@@ -161,4 +189,9 @@ public class CodeTemplatesTest {
     }
   }
 
+  @Test
+  public void testCopyChildFile() throws CoreException {
+    CodeTemplates.copyChildFile("favicon.ico", parent, monitor);
+    Assert.assertTrue(parent.getFile("favicon.ico").exists());
+  }
 }

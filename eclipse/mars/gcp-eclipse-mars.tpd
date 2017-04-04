@@ -36,9 +36,9 @@ location "http://download.eclipse.org/releases/mars/" {
 	org.eclipse.jetty.util
 }
 
-location "http://download.eclipse.org/releases/neon/" {
-	org.eclipse.epp.logging.aeri.core
-	org.eclipse.epp.logging.aeri.ide
+location "http://download.eclipse.org/technology/epp/logging/stable/" {
+	org.eclipse.epp.logging.aeri.feature.feature.group
+	org.eclipse.epp.logging.aeri.feature.source.feature.group
 }
 
 location "http://download.eclipse.org/webtools/repository/mars/" {
@@ -52,4 +52,6 @@ location "http://download.eclipse.org/webtools/repository/mars/" {
 
 location "http://download.eclipse.org/tools/orbit/downloads/drops/R20160221192158/repository/" {
 	org.hamcrest
+	ch.qos.logback.slf4j
+	org.slf4j.log4j
 }

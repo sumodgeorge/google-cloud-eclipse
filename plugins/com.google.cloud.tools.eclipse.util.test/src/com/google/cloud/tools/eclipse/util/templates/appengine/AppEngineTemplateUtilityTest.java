@@ -44,6 +44,9 @@ public class AppEngineTemplateUtilityTest {
   private SubMonitor monitor = SubMonitor.convert(new NullProgressMonitor());
   private IProject project;
   private IFile testFile;
+  private String fileLocation;
+  private Map<String, String> dataMap = new HashMap<>();
+
 
   @Before
   public void setUp() throws CoreException {
@@ -57,6 +60,7 @@ public class AppEngineTemplateUtilityTest {
     if (!testFile.exists()) {
       testFile.create(new ByteArrayInputStream(new byte[0]), true, monitor);
     }
+    fileLocation = testFile.getLocation().toString();
   }
 
   @After
@@ -67,83 +71,87 @@ public class AppEngineTemplateUtilityTest {
 
   @Test
   public void testCreateFileContent_appengineWebXml() throws CoreException, IOException {
-    String fileLocation = testFile.getLocation().toString();
     AppEngineTemplateUtility.createFileContent(fileLocation,
         AppEngineTemplateUtility.APPENGINE_WEB_XML_TEMPLATE,
-        Collections.<String, String>emptyMap());
+        dataMap);
 
-    InputStream testFileStream = testFile.getContents(true);
-    InputStream expectedFileStream = getDataFile("appengineWebXml.txt");
-    compareFileContent(expectedFileStream, testFileStream);
+    compareToFile("appengineWebXml.txt");
+  }
+  
+  @Test
+  public void testCreateFileContent_appengineWebXmlWithService()
+      throws CoreException, IOException {
+    dataMap.put("service", "foobar");
+    AppEngineTemplateUtility.createFileContent(fileLocation,
+        AppEngineTemplateUtility.APPENGINE_WEB_XML_TEMPLATE,
+        dataMap);
+
+    compareToFile("appengineWebXmlWithService.txt");
+  }
+  
+  @Test
+  public void testCreateFileContent_appYamlWithService()
+      throws CoreException, IOException {
+    dataMap.put("service", "foobar");
+    AppEngineTemplateUtility.createFileContent(fileLocation,
+        AppEngineTemplateUtility.APP_YAML_TEMPLATE,
+        dataMap);
+
+    compareToFile("appYamlWithService.txt");
   }
 
   @Test
   public void testCreateFileContent_helloAppEngineWithPackage() throws CoreException, IOException {
-    String fileLocation = testFile.getLocation().toString();
-    Map<String, String> dataMap = new HashMap<String, String>();
     dataMap.put("package", "com.example");
     AppEngineTemplateUtility.createFileContent(fileLocation,
         AppEngineTemplateUtility.HELLO_APPENGINE_TEMPLATE, dataMap);
 
-    InputStream testFileStream = testFile.getContents(true);
-    InputStream expectedFileStream = getDataFile("helloAppEngineWithPackage.txt");
-    compareFileContent(expectedFileStream, testFileStream);
+    compareToFile("helloAppEngineWithPackage.txt");
   }
 
   @Test
   public void testCreateFileContent_helloAppEngineWithoutPackage()
       throws CoreException, IOException {
-    String fileLocation = testFile.getLocation().toString();
-    Map<String, String> dataMap = new HashMap<String, String>();
     dataMap.put("package", "");
     AppEngineTemplateUtility.createFileContent(fileLocation,
         AppEngineTemplateUtility.HELLO_APPENGINE_TEMPLATE, dataMap);
 
-    InputStream testFileStream = testFile.getContents(true);
-    InputStream expectedFileStream = getDataFile("helloAppEngineWithoutPackage.txt");
-    compareFileContent(expectedFileStream, testFileStream);
+    compareToFile("helloAppEngineWithoutPackage.txt");
   }
 
   @Test
   public void testCreateFileContent_index() throws CoreException, IOException {
-    String fileLocation = testFile.getLocation().toString();
     AppEngineTemplateUtility.createFileContent(fileLocation,
         AppEngineTemplateUtility.INDEX_HTML_TEMPLATE, Collections.<String, String>emptyMap());
 
-    InputStream testFileStream = testFile.getContents(true);
-    InputStream expectedFileStream = getDataFile("index.txt");
-    compareFileContent(expectedFileStream, testFileStream);
+    compareToFile("index.txt");
   }
 
   @Test
   public void testCreateFileContent_web() throws CoreException, IOException {
-    String fileLocation = testFile.getLocation().toString();
-    Map<String, String> dataMap = new HashMap<String, String>();
     dataMap.put("package", "com.example.");
     AppEngineTemplateUtility.createFileContent(fileLocation,
         AppEngineTemplateUtility.WEB_XML_TEMPLATE, dataMap);
 
-    InputStream testFileStream = testFile.getContents(true);
-    InputStream expectedFileStream = getDataFile("web.txt");
-    compareFileContent(expectedFileStream, testFileStream);
+    compareToFile("web.txt");
   }
 
-  private InputStream getDataFile(String fileName) throws IOException {
+  private static InputStream getDataFile(String fileName) throws IOException {
     Bundle bundle = FrameworkUtil.getBundle(AppEngineTemplateUtilityTest.class);
     URL expectedFileUrl = bundle.getResource("/testData/templates/appengine/" + fileName);
     return expectedFileUrl.openStream();
   }
 
-  private void compareFileContent(InputStream expectedFileStream, InputStream actualFileStream) {
-    Scanner expectedScanner = new Scanner(expectedFileStream);
-    String expectedContent = expectedScanner.useDelimiter("\\Z").next();
-    expectedScanner.close();
-
-    Scanner actualScanner = new Scanner(actualFileStream);
-    String actualContent = actualScanner.useDelimiter("\\Z").next();
-    actualScanner.close();
-
-    Assert.assertEquals(expectedContent, actualContent);
+  private void compareToFile(String expected) throws CoreException, IOException {
+    
+    try (InputStream testFileStream = testFile.getContents(true);
+        InputStream expectedFileStream = getDataFile(expected);
+        Scanner expectedScanner = new Scanner(expectedFileStream);
+        Scanner actualScanner = new Scanner(testFileStream)) {
+      String expectedContent = expectedScanner.useDelimiter("\\Z").next();
+      String actualContent = actualScanner.useDelimiter("\\Z").next();
+      Assert.assertEquals(expectedContent, actualContent);
+    }
   }
 
 }

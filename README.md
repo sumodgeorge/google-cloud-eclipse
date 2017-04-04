@@ -1,9 +1,10 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+[![Build Status](https://travis-ci.org/GoogleCloudPlatform/google-cloud-eclipse.svg?branch=master)](https://travis-ci.org/GoogleCloudPlatform/google-cloud-eclipse)
 
 
 This project provides an Eclipse plugin for building, debugging, and deploying Google Cloud Platform applications.
 
-[End user documentation and installation instructions can be found in the Github Wiki.](https://github.com/GoogleCloudPlatform/google-cloud-eclipse/wiki/Google-Cloud-Tools-for-Eclipse)
+[End user documentation and installation instructions can be found on cloud.google.com.](https://cloud.google.com/eclipse/docs/)
 
 _TL;DR_: `mvn -Dtycho.toolchains=SYSTEM package` should
 generate a p2-accessible repository in `gcp-repo/target/repository`.
@@ -51,7 +52,7 @@ The tests need to find the Google Cloud SDK.  You can either:
 
 By default, the build is targeted against Eclipse Mars / 4.5. 
 You can explicitly set the `eclipse.target` property to 
-`neon` (4.6).
+`neon` (4.6) or `oxygen` (4.7).
 ```
 $ mvn -Declipse.target=neon package
 ```
@@ -97,6 +98,17 @@ indicate a misconfigured _jdkHome_.
 You can disable the use of toolchains by setting the `tycho.toolchains`
 property to `SYSTEM`.
 
+### Adding a new bundle/fragment
+
+We normally put production code into a bundle and tests as a fragment hosted
+by that bundle, put under the `plugins/` directory. 
+For now we have been committing both the `pom.xml` and Eclipse's
+`.project`, `.classpath`, and `.settings/` files.
+
+Our CI process is configured to run our tests with JaCoCo, which requires
+some additional configuration to add new bundles and fragments
+in `build/jacoco/`.
+
 
 ## Import into Eclipse
 
@@ -110,17 +122,23 @@ through to set up a working development environment.
 The Eclipse IDE and Tycho both use a _Target Platform_ to manage
 the dependencies for the source bundles and features under development.
 Although Tycho can pull dependencies directly from Maven-style
-repositories, Eclipse cannot.  So we use Tycho to cobble together
-a target platform suitable for the Eclipse IDE.
+repositories (like [Maven Central](https://search.maven.org)), Eclipse
+cannot.  So we use Tycho to cobble together
+a target platform suitable for the Eclipse IDE with the following command.
 ```
-$ mvn -Pide-target-platform package
+$ (cd eclipse; mvn package)        # may want -Declipse.target=XXX
 ```
-This command builds the project, but also creates a local copy of the
+This command creates a local copy of the
 target platform, including any Maven dependencies, into
 [`eclipse/ide-target-platform/target/repository`](eclipse/ide-target-platform/target/repository).
+You will use this repository to create a target platform within the IDE,
+as described below.
 
-The target platform is affected by the `eclipse.target` property,
-described below.
+The Eclipse version used for the target platform is affected by the
+`eclipse.target` property, described below.
+
+You must regenerate the target platform and reconfigure the IDE's
+target platform whenever dependencies are updated.
 
 ### Steps to import into the Eclipse IDE
 
@@ -203,34 +221,47 @@ described below.
   1. There should be no errors in the `Markers` or `Problems` views in Eclipse.
     However you may see several low-priority warnings.
 
-  1. Right-click the `gcloud-eclipse-tools.launch` file under the `trunk` module in the
-  `Package Explorer`.
+      1. You may see Maven-related errors like _"plugin execution not
+         covered by lifecycle configuration"_. 
+         If so, right-click on the problem and select
+         _Quick Fix_ > _Discover new m2e connectors_
+	 and follow the process to install the recommended plugin
+	 connectors.
 
-  1. Select `Run Configurations...`
+5. Create and initialize a launch configuration:
 
-  1. Go to the second tab for `Arguments`
+  1. Right-click the `gcloud-eclipse-tools.launch` file under the
+  `google-cloud-eclipse` module in the `Package Explorer`.
 
-  1. Click the `Variables...` button
+  1. Select `Run As` > `Run Configurations...`
 
-  1. Click the `Edit variables...` button
+  1. Set variables required for launch:
 
-  1. Click `New...`
+    1. Go to the second tab for `Arguments`
 
-  1. Set the name to `oauth_id`, and the value to the value you want to use, description optional
+    1. Click the `Variables...` button for `VM argument:`
 
-  1. Click `OK`, the variable will appear in the list
+    1. Click the `Edit variables...` button
 
-  1. Repeat steps 6-8 but use `oauth_secret` as the name and use the corresponding value
+    1. Click `New...`
 
-  1. Click `OK` to close the edit variables dialog
+    1. Set the name to `oauth_id`, and the value to the value you want to use
+    (description optional)
 
-  1. Click `Cancel` to close the variable selection dialog
+    1. Click `OK`, the variable will appear in the list
 
-  1. Click `Apply` to apply the changes to the run config
+    1. Repeat steps 6-8 but use `oauth_secret` as the name and use the
+    corresponding value
+
+    1. Click `OK` to close the edit variables dialog
+
+    1. Click `Cancel` to close the variable selection dialog
+
+    1. Click `Apply` to apply the changes to the run config
+
+  1. From the `Run` menu, select `Run History > gcloud-eclipse-tools`
   
-  1. Click to `Run` button
-
-  1. A new instance of Eclipse should be launched with the plugin installed.
+  1. A new instance of Eclipse launches with the plugin installed.
 
 
 # Updating Target Platforms
@@ -239,12 +270,13 @@ described below.
 
 We use _Target Platform_ files (`.target`) to collect the dependencies used
 for the build.  These targets specify exact versions of the bundles and
-features being built against.  We currently maintain two target platforms,
-targeting the latest version of the current and previous release trains.
+features being built against. We currently maintain three target platforms,
+targeting the latest version of the current, previous, and next releases.
 This is currently:
 
   - Eclipse Mars (4.5 SR2): [`eclipse/mars/gcp-eclipse-mars.target`](eclipse/mars/gcp-eclipse-mars.target) 
   - Eclipse Neon (4.6): [`eclipse/neon/gcp-eclipse-neon.target`](eclipse/neon/gcp-eclipse-neon.target)
+  - Eclipse Oxygen (4.7): [`eclipse/oxygen/gcp-eclipse-oxygen.target`](eclipse/oxygen/gcp-eclipse-oxygen.target)
 
 These `.target` files are generated and *should not be manually updated*.
 Updating `.target` files directly becomes a chore once it has more than a 

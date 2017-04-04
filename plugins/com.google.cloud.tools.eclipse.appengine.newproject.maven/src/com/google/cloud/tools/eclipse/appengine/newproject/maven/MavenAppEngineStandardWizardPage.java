@@ -16,20 +16,20 @@
 
 package com.google.cloud.tools.eclipse.appengine.newproject.maven;
 
+import com.google.cloud.tools.eclipse.appengine.libraries.model.CloudLibraries;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.Library;
 import com.google.cloud.tools.eclipse.appengine.newproject.JavaPackageValidator;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineImages;
-import com.google.cloud.tools.eclipse.appengine.ui.AppEngineLibrariesSelectorGroup;
+import com.google.cloud.tools.eclipse.appengine.ui.LibrarySelectorGroup;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsPingManager;
 import com.google.cloud.tools.io.FilePermissions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Paths;
 import java.util.Collection;
-import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
@@ -40,7 +40,6 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.wizard.WizardPage;
-import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -48,7 +47,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
@@ -58,8 +56,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
 /**
- * UI to collect all information necessary to create a new Maven-based App Engine Standard Java
- * project.
+ * UI to collect all information necessary to create a new Maven-based App Engine Standard
+ * environment Java project.
  */
 public class MavenAppEngineStandardWizardPage extends WizardPage {
 
@@ -72,7 +70,7 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
   private Text artifactIdField;
   private Text versionField;
   @VisibleForTesting Text javaPackageField;
-  private AppEngineLibrariesSelectorGroup appEngineLibrariesSelectorGroup;
+  private LibrarySelectorGroup appEngineLibrariesSelectorGroup;
 
   private boolean canFlipPage;
 
@@ -114,10 +112,12 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
     PlatformUI.getWorkbench().getHelpSystem().setHelp(container,
         "com.google.cloud.tools.eclipse.appengine.newproject.maven.NewMavenProjectContext"); //$NON-NLS-1$
 
-    createLocationArea(container);
-    createMavenCoordinatesArea(container);
-    createAppEngineProjectDetailsArea(container);
-    appEngineLibrariesSelectorGroup = new AppEngineLibrariesSelectorGroup(container);
+    ModifyListener pageValidator = new PageValidator();
+    createLocationArea(container, pageValidator);
+    createMavenCoordinatesArea(container, pageValidator);
+    createAppEngineProjectDetailsArea(container, pageValidator);
+    appEngineLibrariesSelectorGroup =
+        new LibrarySelectorGroup(container, CloudLibraries.APP_ENGINE_GROUP);
     appEngineLibrariesSelectorGroup.addSelectionChangedListener(new ISelectionChangedListener() {
       @Override
       public void selectionChanged(SelectionChangedEvent event) {
@@ -129,20 +129,19 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
   }
 
   /** Create UI for specifying the generated location area */
-  private void createLocationArea(Composite container) {
-    ModifyListener pageValidator = new PageValidator();
+  private void createLocationArea(Composite container, ModifyListener pageValidator) {
 
     Group locationGroup = new Group(container, SWT.NONE);
     locationGroup.setText(Messages.getString("LOCATION_GROUP_TEXT")); //$NON-NLS-1$
     GridDataFactory.fillDefaults().span(2, 1).applyTo(locationGroup);
     GridLayoutFactory.swtDefaults().numColumns(3).applyTo(locationGroup);
 
-    useDefaults = new Button(locationGroup, SWT.CHECK);
+    useDefaults = new Button(locationGroup, SWT.CHECK | SWT.LEAD);
     GridDataFactory.defaultsFor(useDefaults).span(3, 1).applyTo(useDefaults);
     useDefaults.setText(Messages.getString("CREATE_PROJECT_IN_WORKSPACE")); //$NON-NLS-1$
     useDefaults.setSelection(true);
 
-    Label locationLabel = new Label(locationGroup, SWT.NONE);
+    Label locationLabel = new Label(locationGroup, SWT.LEAD);
     locationLabel.setText(Messages.getString("LOCATION_LABEL")); //$NON-NLS-1$
     locationLabel.setToolTipText(Messages.getString("LOCATION_TOOL_TIP")); //$NON-NLS-1$
 
@@ -182,15 +181,13 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
   }
 
   /** Create UI for specifying desired Maven Coordinates */
-  private void createMavenCoordinatesArea(Composite container) {
-    ModifyListener pageValidator = new PageValidator();
-
+  private void createMavenCoordinatesArea(Composite container, ModifyListener pageValidator) {
     Group mavenCoordinatesGroup = new Group(container, SWT.NONE);
     mavenCoordinatesGroup.setText(Messages.getString("MAVEN_PROJECT_COORDINATES")); //$NON-NLS-1$
     GridDataFactory.defaultsFor(mavenCoordinatesGroup).span(2, 1).applyTo(mavenCoordinatesGroup);
     GridLayoutFactory.swtDefaults().numColumns(2).applyTo(mavenCoordinatesGroup);
 
-    Label groupIdLabel = new Label(mavenCoordinatesGroup, SWT.NONE);
+    Label groupIdLabel = new Label(mavenCoordinatesGroup, SWT.LEAD);
     groupIdLabel.setText(Messages.getString("GROUP_ID")); //$NON-NLS-1$
     groupIdField = new Text(mavenCoordinatesGroup, SWT.BORDER);
     groupIdField.setToolTipText(Messages.getString("GROUP_ID_TOOLTIP")); //$NON-NLS-1$
@@ -199,16 +196,16 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
     groupIdField.addModifyListener(pageValidator);
     groupIdField.addModifyListener(new AutoPackageNameSetterOnGroupIdChange());
 
-    Label artifactIdLabel = new Label(mavenCoordinatesGroup, SWT.NONE);
+    Label artifactIdLabel = new Label(mavenCoordinatesGroup, SWT.LEAD);
     artifactIdLabel.setText(Messages.getString("ARTIFACT_ID")); //$NON-NLS-1$
     artifactIdField = new Text(mavenCoordinatesGroup, SWT.BORDER);
     artifactIdField.setToolTipText(Messages.getString("ARTIFACT_ID_TOOLTIP")); //$NON-NLS-1$
-    
+
     GridDataFactory.defaultsFor(artifactIdField).align(SWT.FILL, SWT.CENTER)
         .applyTo(artifactIdField);
     artifactIdField.addModifyListener(pageValidator);
 
-    Label versionLabel = new Label(mavenCoordinatesGroup, SWT.NONE);
+    Label versionLabel = new Label(mavenCoordinatesGroup, SWT.LEAD);
     versionLabel.setText(Messages.getString("ARTIFACT_VERSION")); //$NON-NLS-1$
     versionField = new Text(mavenCoordinatesGroup, SWT.BORDER);
     versionField.setText(defaultVersion);
@@ -217,16 +214,16 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
   }
 
   /** Create UI for specifying App Engine project details */
-  private void createAppEngineProjectDetailsArea(Composite container) {
-    ModifyListener pageValidator = new PageValidator();
+  private void createAppEngineProjectDetailsArea(Composite container,
+      ModifyListener pageValidator) {
+    Composite composite = new Composite(container, SWT.NONE);
+    // assumed that container has a two-column GridLayout
+    GridDataFactory.fillDefaults().span(2, 1).grab(true,  false).applyTo(composite);
 
     // Java package name
-    Label packageNameLabel = new Label(container, SWT.NONE);
+    Label packageNameLabel = new Label(composite, SWT.LEAD);
     packageNameLabel.setText(Messages.getString("JAVA_PACKAGE_LABEL")); //$NON-NLS-1$
-    javaPackageField = new Text(container, SWT.BORDER);
-    GridData javaPackagePosition = new GridData(GridData.FILL_HORIZONTAL);
-    javaPackagePosition.horizontalSpan = 2;
-    javaPackageField.setLayoutData(javaPackagePosition);
+    javaPackageField = new Text(composite, SWT.BORDER);
     javaPackageField.addModifyListener(pageValidator);
     javaPackageField.addVerifyListener(new VerifyListener() {
 
@@ -238,6 +235,9 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
         }
       }
     });
+
+    GridDataFactory.fillDefaults().grab(true, false).applyTo(javaPackageField);
+    GridLayoutFactory.swtDefaults().numColumns(2).applyTo(composite);
   }
 
   private void openLocationDialog() {
@@ -285,17 +285,8 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
     if (!validateAppEngineProjectDetails()) {
       return false;
     }
-    checkMavenUpdateSettings();
 
     return true;
-  }
-
-  private void checkMavenUpdateSettings() {
-    String globalUpdatePolicy = MavenPlugin.getMavenConfiguration().getGlobalUpdatePolicy();
-    if (!appEngineLibrariesSelectorGroup.getSelectedLibraries().isEmpty()
-        && RepositoryPolicy.UPDATE_POLICY_NEVER.equals(globalUpdatePolicy)) {
-      setMessage(Messages.getString("M2E_GLOBAL_UPDATES_PREVENT_CHECKS"), WARNING); //$NON-NLS-1$
-    }
   }
 
   @VisibleForTesting
@@ -308,12 +299,13 @@ public class MavenAppEngineStandardWizardPage extends WizardPage {
         java.nio.file.Path path = Paths.get(location);
         FilePermissions.verifyDirectoryCreatable(path);
         return true;
-      } catch (FileAlreadyExistsException ex) {
+      } catch (NotDirectoryException ex) {
           String message = Messages.getString("FILE_LOCATION", location); //$NON-NLS-1$
           page.setMessage(message, ERROR);
           return false;
       } catch (IOException ex) {
-        String message = Messages.getString("INVALID_PATH", location); //$NON-NLS-1$
+        String message = Messages.getString(
+            "INVALID_PATH", location, ex.getLocalizedMessage()); //$NON-NLS-1$
         page.setMessage(message, ERROR);
         return false;
       }

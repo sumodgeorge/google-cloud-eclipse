@@ -16,10 +16,9 @@
 
 package com.google.cloud.tools.eclipse.appengine.deploy.ui;
 
+import com.google.cloud.tools.eclipse.appengine.deploy.standard.StandardDeployPreferences;
 import org.eclipse.core.resources.IProject;
 import org.osgi.service.prefs.BackingStoreException;
-
-import com.google.cloud.tools.eclipse.appengine.deploy.standard.StandardDeployPreferences;
 
 public class DeployPreferencesModel {
 
@@ -27,11 +26,10 @@ public class DeployPreferencesModel {
 
   private String accountEmail;
   private String projectId;
-  private boolean overrideDefaultVersioning;
   private String version;
   private boolean autoPromote;
   private boolean stopPreviousVersion;
-  private boolean overrideDefaultBucket;
+  private boolean includeOptionalConfigurationFiles;
   private String bucket;
 
   public DeployPreferencesModel(IProject project) {
@@ -42,26 +40,24 @@ public class DeployPreferencesModel {
   private void applyPreferences(StandardDeployPreferences preferences) {
     setAccountEmail(preferences.getAccountEmail());
     setProjectId(preferences.getProjectId());
-    setOverrideDefaultVersioning(preferences.isOverrideDefaultVersioning());
     setVersion(preferences.getVersion());
     setAutoPromote(preferences.isAutoPromote());
     setStopPreviousVersion(preferences.isStopPreviousVersion());
-    setOverrideDefaultBucket(preferences.isOverrideDefaultBucket());
+    setIncludeOptionalConfigurationFiles(preferences.isIncludeOptionalConfigurationFiles());
     setBucket(preferences.getBucket());
   }
 
-  public void resetToDefaults() {
-    applyPreferences(StandardDeployPreferences.DEFAULT);
+  void resetToDefaults() {
+    applyPreferences(StandardDeployPreferences.getDefaultPreferences());
   }
 
   public void savePreferences() throws BackingStoreException {
     preferences.setAccountEmail(getAccountEmail());
     preferences.setProjectId(getProjectId());
-    preferences.setOverrideDefaultVersioning(isOverrideDefaultVersioning());
     preferences.setVersion(getVersion());
     preferences.setAutoPromote(isAutoPromote());
     preferences.setStopPreviousVersion(isStopPreviousVersion());
-    preferences.setOverrideDefaultBucket(isOverrideDefaultBucket());
+    preferences.setIncludeOptionalConfigurationFiles(isIncludeOptionalConfigurationFiles());
     preferences.setBucket(getBucket());
     preferences.save();
   }
@@ -80,14 +76,6 @@ public class DeployPreferencesModel {
 
   public void setProjectId(String projectId) {
     this.projectId = projectId;
-  }
-
-  public boolean isOverrideDefaultVersioning() {
-    return overrideDefaultVersioning;
-  }
-
-  public void setOverrideDefaultVersioning(boolean overrideDefaultVersioning) {
-    this.overrideDefaultVersioning = overrideDefaultVersioning;
   }
 
   public String getVersion() {
@@ -114,12 +102,12 @@ public class DeployPreferencesModel {
     this.stopPreviousVersion = stopPreviousVersion;
   }
 
-  public boolean isOverrideDefaultBucket() {
-    return overrideDefaultBucket;
+  public boolean isIncludeOptionalConfigurationFiles() {
+    return includeOptionalConfigurationFiles;
   }
 
-  public void setOverrideDefaultBucket(boolean overrideDefaultBucket) {
-    this.overrideDefaultBucket = overrideDefaultBucket;
+  public void setIncludeOptionalConfigurationFiles(boolean includeOptionalConfigurationFiles) {
+    this.includeOptionalConfigurationFiles = includeOptionalConfigurationFiles;
   }
 
   public String getBucket() {

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.tools.eclipse.appengine.facets.AppEngineStandardFacet;
+import com.google.cloud.tools.eclipse.test.util.ThreadDumpingWatchdog;
 import com.google.cloud.tools.eclipse.test.util.project.ProjectUtils;
 import com.google.cloud.tools.eclipse.util.FacetedProjectHelper;
 import com.google.cloud.tools.eclipse.util.MavenUtils;
@@ -31,19 +32,24 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
+import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test creation of a new project with the "Maven-Based Google App Engine Standard Java Project"
  * wizard.
  */
 @RunWith(SWTBotJunit4ClassRunner.class)
-public class NewMavenBasedAppEngineProjectWizardTest extends AbstractProjectTests {
+public class NewMavenBasedAppEngineProjectWizardTest extends BaseProjectTest {
+  @Rule
+  public ThreadDumpingWatchdog timer = new ThreadDumpingWatchdog(2, TimeUnit.MINUTES);
 
   @Test
   public void testHelloWorld() throws Exception {
@@ -87,8 +93,8 @@ public class NewMavenBasedAppEngineProjectWizardTest extends AbstractProjectTest
       String packageName, String archetypeDescription, String[] projectFiles)
       throws CoreException, IOException {
     assertFalse(projectExists(artifactId));
-    
-    project = SwtBotAppEngineActions.createMavenWebAppProject(bot, location, 
+
+    project = SwtBotAppEngineActions.createMavenWebAppProject(bot, location,
         "com.google.groupId", artifactId, packageName, archetypeDescription);
     assertTrue(project.exists());
     if (location != null) {
@@ -96,15 +102,16 @@ public class NewMavenBasedAppEngineProjectWizardTest extends AbstractProjectTest
           project.getLocation().toFile().getParentFile().getCanonicalPath());
     }
 
-    IFacetedProject facetedProject = new FacetedProjectHelper().getFacetedProject(project);
+    IFacetedProject facetedProject = ProjectFacetsManager.create(project);
     assertNotNull("m2e-wtp should create a faceted project", facetedProject);
     assertTrue("Project does not have standard facet",
-        new FacetedProjectHelper().projectHasFacet(facetedProject, AppEngineStandardFacet.ID));
+        FacetedProjectHelper.projectHasFacet(facetedProject, AppEngineStandardFacet.ID));
 
     for (String projectFile : projectFiles) {
       Path projectFilePath = new Path(projectFile);
       assertTrue(project.exists(projectFilePath));
     }
+    ProjectUtils.waitForProjects(project); // App Engine runtime is added via a Job, so wait.
     ProjectUtils.failIfBuildErrors("New Maven project has errors", project);
   }
 }

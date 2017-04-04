@@ -24,7 +24,7 @@ public class FlexDeployPreferenceInitializer extends AbstractPreferenceInitializ
   private static final String PREFERENCE_STORE_DEFAULTS_QUALIFIER =
       "com.google.cloud.tools.eclipse.appengine.deploy.flex.defaults";
 
-  static final String DEFAULT_APP_ENGINE_DIRECTORY = "";
+  static final String DEFAULT_APP_ENGINE_DIRECTORY = "src/main/appengine";
   static final String DEFAULT_DOCKER_DIRECTORY = "";
   static final boolean DEFAULT_USE_DEPLOYMENT_PREFERENCES = false;
 
@@ -34,7 +34,8 @@ public class FlexDeployPreferenceInitializer extends AbstractPreferenceInitializ
         DefaultScope.INSTANCE.getNode(PREFERENCE_STORE_DEFAULTS_QUALIFIER);
     preferences.put(FlexDeployPreferences.PREF_APP_ENGINE_DIRECTORY, DEFAULT_APP_ENGINE_DIRECTORY);
     preferences.put(FlexDeployPreferences.PREF_DOCKER_DIRECTORY, DEFAULT_DOCKER_DIRECTORY);
-    preferences.putBoolean(FlexDeployPreferences.PREF_USE_DEPLOYMENT_PREFERENCES, DEFAULT_USE_DEPLOYMENT_PREFERENCES);
+    preferences.putBoolean(FlexDeployPreferences.PREF_USE_DEPLOYMENT_PREFERENCES,
+        DEFAULT_USE_DEPLOYMENT_PREFERENCES);
   }
 
   public static IEclipsePreferences getDefaultPreferences() {

@@ -21,30 +21,35 @@ import com.google.cloud.tools.eclipse.appengine.localserver.Messages;
 import com.google.cloud.tools.eclipse.util.status.StatusUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import java.text.MessageFormat;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jst.server.core.IWebModule;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IModuleType;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.internal.facets.FacetUtil;
+import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
 @SuppressWarnings("restriction") // For FacetUtil
-public class LocalAppEngineServerDelegate extends ServerDelegate {
+public class LocalAppEngineServerDelegate extends ServerDelegate implements IURLProvider {
+  private static final Logger logger =
+      Logger.getLogger(LocalAppEngineServerDelegate.class.getName());
   public static final String RUNTIME_TYPE_ID =
-      "com.google.cloud.tools.eclipse.appengine.standard.runtime";
+      "com.google.cloud.tools.eclipse.appengine.standard.runtime"; //$NON-NLS-1$
   public static final String SERVER_TYPE_ID =
-      "com.google.cloud.tools.eclipse.appengine.standard.server";
+      "com.google.cloud.tools.eclipse.appengine.standard.server"; //$NON-NLS-1$
 
   private static final IModule[] EMPTY_MODULES = new IModule[0];
   private static final String SERVLET_MODULE_FACET = "jst.web"; //$NON-NLS-1$
@@ -79,13 +84,7 @@ public class LocalAppEngineServerDelegate extends ServerDelegate {
     if (!result.isOK()) {
       return result;
     }
-    return checkConflictingServiceIds(getServer().getModules(), add, remove,
-        new Function<IModule, String>() {
-          @Override
-          public String apply(IModule module) {
-            return ModuleUtils.getServiceId(module);
-          }
-        });
+    return checkConflictingServiceIds(getServer().getModules(), add, remove);
   }
 
   /**
@@ -115,25 +114,22 @@ public class LocalAppEngineServerDelegate extends ServerDelegate {
    */
   @VisibleForTesting
   IStatus checkConflictingServiceIds(IModule[] current, IModule[] toBeAdded,
-      IModule[] toBeRemoved, Function<IModule, String> serviceIdFunction) {
+      IModule[] toBeRemoved) {
 
     // verify that we do not have conflicting modules by service id
     Map<String, IModule> currentServiceIds = new HashMap<>();
     for (IModule module : current) {
-      String moduleServiceId = serviceIdFunction.apply(module);
+      String moduleServiceId = getServiceId(module);
       if (currentServiceIds.containsKey(moduleServiceId)) {
-        // uh oh, we have a conflict within the already-defined modules
-        return StatusUtil.error(LocalAppEngineServerDebugTarget.class,
-            MessageFormat.format(
-                "\"{0}\" and \"{1}\" have same App Engine Service ID: {2}",
-                currentServiceIds.get(moduleServiceId).getName(), module.getName(),
-                moduleServiceId));
+        // should never happen: we have a conflict within the already-defined modules
+        return StatusUtil.error(this, Messages.getString("SERVICE_CONFLICTS", //$NON-NLS-1$
+            module.getName(), currentServiceIds.get(moduleServiceId).getName(), moduleServiceId));
       }
       currentServiceIds.put(moduleServiceId, module);
     }
     if (toBeRemoved != null) {
       for (IModule module : toBeRemoved) {
-        String moduleServiceId = serviceIdFunction.apply(module);
+        String moduleServiceId = getServiceId(module);
         // could verify that: serviceIds.containsKey(moduleServiceId)
         currentServiceIds.remove(moduleServiceId);
       }
@@ -144,13 +140,10 @@ public class LocalAppEngineServerDelegate extends ServerDelegate {
           // skip modules that are already present
           continue;
         }
-        String moduleServiceId = serviceIdFunction.apply(module);
+        String moduleServiceId = getServiceId(module);
         if (currentServiceIds.containsKey(moduleServiceId)) {
-          return StatusUtil.error(LocalAppEngineServerDebugTarget.class,
-              MessageFormat.format(
-                  "\"{0}\" and \"{1}\" have same App Engine Service ID: {2}",
-                  currentServiceIds.get(moduleServiceId).getName(), module.getName(),
-                  moduleServiceId));
+          return StatusUtil.error(this, Messages.getString("SERVICE_CONFLICTS", //$NON-NLS-1$
+              module.getName(), currentServiceIds.get(moduleServiceId).getName(), moduleServiceId));
         }
         currentServiceIds.put(moduleServiceId, module);
       }
@@ -158,19 +151,28 @@ public class LocalAppEngineServerDelegate extends ServerDelegate {
     return Status.OK_STATUS;
   }
 
+  @VisibleForTesting
+  Function<IModule, String> serviceIdFunction;
+
+  private String getServiceId(IModule module) {
+    if (serviceIdFunction != null) {
+      return serviceIdFunction.apply(module);
+    }
+    return ModuleUtils.getServiceId(module);
+  }
+
   private static IStatus hasAppEngineStandardFacet(IModule module) {
     try {
-      if (AppEngineStandardFacet.hasAppEngineFacet(ProjectFacetsManager.create(module.getProject()))) {
+      if (AppEngineStandardFacet.hasFacet(ProjectFacetsManager.create(module.getProject()))) {
         return Status.OK_STATUS;
       } else {
-        String errorMessage = NLS.bind(Messages.GAE_STANDARD_FACET_MISSING, module.getName(),
+        String errorMessage = Messages.getString("GAE_STANDARD_FACET_MISSING", module.getName(), //$NON-NLS-1$
             module.getProject().getName());
         return StatusUtil.error(LocalAppEngineServerDelegate.class, errorMessage);
       }
     } catch (CoreException ex) {
       return StatusUtil.error(LocalAppEngineServerDelegate.class,
-                              NLS.bind(Messages.NOT_FACETED_PROJECT, module.getProject().getName()),
-                              ex);
+          Messages.getString("NOT_FACETED_PROJECT", module.getProject().getName()), ex); //$NON-NLS-1$
     }
   }
 
@@ -236,6 +238,29 @@ public class LocalAppEngineServerDelegate extends ServerDelegate {
     }
     if (modules != null) {
       setAttribute(ATTR_APP_ENGINE_SERVER_MODULES, modules);
+    }
+  }
+
+  @Override
+  public URL getModuleRootURL(IModule module) {
+    // use getAdapter() to avoid unnecessarily loading the class (e.g., not started yet)
+    LocalAppEngineServerBehaviour serverBehaviour =
+        (LocalAppEngineServerBehaviour) getServer().getAdapter(LocalAppEngineServerBehaviour.class);
+    if (serverBehaviour == null) {
+      return null;
+    }
+    try {
+      String url;
+      if (module == null) {
+        url = "http://" + getServer().getHost() + ":" + serverBehaviour.getAdminPort(); //$NON-NLS-1$ //$NON-NLS-2$
+      } else {
+        String serviceId = getServiceId(module); // never null
+        url = serverBehaviour.getServiceUrl(serviceId);
+      }
+      return new URL(url);
+    } catch (MalformedURLException ex) {
+      logger.log(Level.WARNING, "Generated invalid URL", ex); //$NON-NLS-1$
+      return null;
     }
   }
 }
