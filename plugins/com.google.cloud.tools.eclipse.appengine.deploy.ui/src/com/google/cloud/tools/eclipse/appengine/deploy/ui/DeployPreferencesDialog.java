@@ -22,6 +22,7 @@ import com.google.cloud.tools.appengine.cloudsdk.CloudSdk;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkNotFoundException;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkOutOfDateException;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineImages;
+import com.google.cloud.tools.eclipse.googleapis.IGoogleApiFactory;
 import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
 import com.google.cloud.tools.eclipse.projectselector.ProjectRepository;
 import com.google.common.base.Preconditions;
@@ -55,14 +56,19 @@ public class DeployPreferencesDialog extends TitleAreaDialog {
   private IProject project;
   private IGoogleLoginService loginService;
 
+  private IGoogleApiFactory googleApiFactory;
+
   public DeployPreferencesDialog(Shell parentShell, IProject project,
-                                 IGoogleLoginService loginService) {
+                                 IGoogleLoginService loginService,
+                                 IGoogleApiFactory googleApiFactory) {
     super(parentShell);
 
     Preconditions.checkNotNull(project, "project is null");
     Preconditions.checkNotNull(loginService, "loginService is null");
+    Preconditions.checkNotNull(googleApiFactory, "googleApiFactory is null");
     this.project = project;
     this.loginService = loginService;
+    this.googleApiFactory = googleApiFactory;
   }
 
   @Override
@@ -76,9 +82,7 @@ public class DeployPreferencesDialog extends TitleAreaDialog {
       setTitleImage(titleImage);
     }
 
-    Button deployButton = getButton(IDialogConstants.OK_ID);
-    deployButton.setText(Messages.getString("deploy"));
-    deployButton.setEnabled(false);
+    getButton(IDialogConstants.OK_ID).setText(Messages.getString("deploy"));
 
     // TitleAreaDialogSupport does not validate initially, let's trigger validation this way
     content.getDataBindingContext().updateTargets();
@@ -92,7 +96,8 @@ public class DeployPreferencesDialog extends TitleAreaDialog {
 
     Composite container = new Composite(dialogArea, SWT.NONE);
     content = new StandardDeployPreferencesPanel(container, project, loginService,
-        getLayoutChangedHandler(), true /* requireValues */, new ProjectRepository());
+        getLayoutChangedHandler(), true /* requireValues */,
+        new ProjectRepository(googleApiFactory));
     GridDataFactory.fillDefaults().grab(true, false).applyTo(content);
 
     // we pull in Dialog's content margins which are zeroed out by TitleAreaDialog
@@ -109,7 +114,7 @@ public class DeployPreferencesDialog extends TitleAreaDialog {
           @Override
           public int getMessageType(ValidationStatusProvider statusProvider) {
             int type = super.getMessageType(statusProvider);
-            setValid(type != IMessageProvider.ERROR && content.hasSelection());
+            setValid(type != IMessageProvider.ERROR);
             return type;
           }
         });
@@ -180,7 +185,7 @@ public class DeployPreferencesDialog extends TitleAreaDialog {
   private void setValid(boolean isValid) {
     Button deployButton = getButton(IDialogConstants.OK_ID);
     if (deployButton != null) {
-      deployButton.setEnabled(isValid && content.hasSelection());
+      deployButton.setEnabled(isValid);
     }
   }
 

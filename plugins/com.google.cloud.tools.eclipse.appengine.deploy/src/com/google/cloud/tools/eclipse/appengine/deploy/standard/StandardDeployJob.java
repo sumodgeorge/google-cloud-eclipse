@@ -78,21 +78,23 @@ public class StandardDeployJob extends WorkspaceJob {
   private IStatus cloudSdkProcessStatus = Status.OK_STATUS;
   private Process process;
 
-  private IProject project;
-  private Credential credential;
-  protected IPath workDirectoryParent;
-  private ProcessOutputLineListener stagingStdoutLineListener;
-  private ProcessOutputLineListener deployStdoutLineListener;
-  private ProcessOutputLineListener stderrLineListener;
-  private DefaultDeployConfiguration deployConfiguration;
-  private CollectingLineListener errorCollectingLineListener;
+  private final IProject project;
+  private final Credential credential;
+  private final IPath workDirectoryParent;
+  private final ProcessOutputLineListener stagingStdoutLineListener;
+  private final ProcessOutputLineListener deployStdoutLineListener;
+  private final ProcessOutputLineListener stderrLineListener;
+  private final DefaultDeployConfiguration deployConfiguration;
+  private final boolean includeOptionalConfigurationFiles;
+  private final CollectingLineListener errorCollectingLineListener;
 
   public StandardDeployJob(IProject project,
                            Credential credential,
                            IPath workDirectoryParent,
                            ProcessOutputLineListener stagingStdoutLineListener,
                            ProcessOutputLineListener stderrLineListener,
-                           DefaultDeployConfiguration deployConfiguration) {
+                           DefaultDeployConfiguration deployConfiguration,
+                           boolean includeOptionalConfigurationFiles) {
     super(Messages.getString("deploy.standard.runnable.name")); //$NON-NLS-1$
     this.project = project;
     this.credential = credential;
@@ -100,8 +102,9 @@ public class StandardDeployJob extends WorkspaceJob {
     this.stagingStdoutLineListener = stagingStdoutLineListener;
     this.stderrLineListener = stderrLineListener;
     this.deployConfiguration = deployConfiguration;
+    this.includeOptionalConfigurationFiles = includeOptionalConfigurationFiles;
     // TODO: change to StringBuilderProcessOutputLineListener from the appengine-plugins-core
-    this.deployStdoutLineListener =  new StringBuilderProcessOutputLineListener();
+    deployStdoutLineListener = new StringBuilderProcessOutputLineListener();
     errorCollectingLineListener =
         new CollectingLineListener(new Predicate<String>() {
                                      @Override
@@ -128,8 +131,8 @@ public class StandardDeployJob extends WorkspaceJob {
         return saveStatus;
       }
 
-      IStatus stagingStatus =
-          stageProject(credentialFile, explodedWarDirectory, stagingDirectory, progress.newChild(30));
+      IStatus stagingStatus = stageProject(
+          credentialFile, explodedWarDirectory, stagingDirectory, progress.newChild(30));
       if (stagingStatus != Status.OK_STATUS) {
         return stagingStatus;
       }
@@ -171,7 +174,8 @@ public class StandardDeployJob extends WorkspaceJob {
     return Status.OK_STATUS;
   }
 
-  private IStatus stageProject(Path credentialFile, IPath explodedWarDirectory, IPath stagingDirectory, IProgressMonitor monitor) {
+  private IStatus stageProject(Path credentialFile,
+      IPath explodedWarDirectory, IPath stagingDirectory, IProgressMonitor monitor) {
     SubMonitor progress = SubMonitor.convert(monitor, 100);
     RecordProcessError stagingExitListener = new RecordProcessError();
     CloudSdk cloudSdk = getCloudSdk(credentialFile, stagingStdoutLineListener, stagingExitListener);
@@ -179,7 +183,8 @@ public class StandardDeployJob extends WorkspaceJob {
     try {
       getJobManager().beginRule(project, progress);
       new ExplodedWarPublisher().publish(project, explodedWarDirectory, progress.newChild(40));
-      new StandardProjectStaging().stage(explodedWarDirectory, stagingDirectory, cloudSdk, progress.newChild(60));
+      new StandardProjectStaging().stage(explodedWarDirectory, stagingDirectory,
+          cloudSdk, progress.newChild(60));
       return stagingExitListener.getExitStatus();
     } catch (CoreException | IllegalArgumentException | OperationCanceledException ex) {
       return StatusUtil.error(getClass(), Messages.getString("deploy.job.staging.failed"), ex);
@@ -188,15 +193,17 @@ public class StandardDeployJob extends WorkspaceJob {
     }
   }
 
-  private IStatus deployProject(Path credentialFile, IPath stagingDirectory, IProgressMonitor monitor) {
+  private IStatus deployProject(Path credentialFile, IPath stagingDirectory,
+      IProgressMonitor monitor) {
     RecordProcessError deployExitListener = new RecordProcessError();
     CloudSdk cloudSdk = getCloudSdk(credentialFile, deployStdoutLineListener, deployExitListener);
-    new AppEngineProjectDeployer().deploy(
-        stagingDirectory, cloudSdk, deployConfiguration, monitor);
+    new AppEngineProjectDeployer().deploy(stagingDirectory, cloudSdk, deployConfiguration,
+        includeOptionalConfigurationFiles, monitor);
     return deployExitListener.getExitStatus();
   }
 
-  private CloudSdk getCloudSdk(Path credentialFile, ProcessOutputLineListener stdoutLineListener, ProcessExitListener processExitListener) {
+  private CloudSdk getCloudSdk(Path credentialFile,
+      ProcessOutputLineListener stdoutLineListener, ProcessExitListener processExitListener) {
     CloudSdk cloudSdk = new CloudSdk.Builder()
                           .addStdOutLineListener(stdoutLineListener)
                           .addStdErrLineListener(stderrLineListener)
@@ -253,20 +260,27 @@ public class StandardDeployJob extends WorkspaceJob {
 
   @VisibleForTesting
   public String getDeployedAppUrl(AppEngineDeployOutput deployOutput) {
-    String project = deployConfiguration.getProject();
     boolean promoting = deployConfiguration.getPromote();
     String version = deployOutput.getVersion();
     String service = deployOutput.getService();
-    Boolean usingDefaultService = DEFAULT_SERVICE.equals(service);
+    String projectId = deployOutput.getProject();
+    boolean usingDefaultService = DEFAULT_SERVICE.equals(service);
 
+    String domain = ".appspot.com";
+    int colon = projectId.indexOf(':');
+    if (colon >= 0) {
+      domain = ".googleplex.com";
+      projectId = projectId.substring(colon + 1);
+    }
+    
     if (promoting && usingDefaultService) {
-      return "https://" + project + ".appspot.com";
+      return "https://" + projectId + domain;
     } else if (promoting && !usingDefaultService) {
-      return "https://" + service +  "-dot-"+  project + ".appspot.com";
+      return "https://" + service +  "-dot-"+  projectId + domain;
     } else if (!promoting && usingDefaultService) {
-      return "https://" + version + "-dot-" + project + ".appspot.com";
+      return "https://" + version + "-dot-" + projectId + domain;
     } else {
-      return "https://" + version + "-dot-" + service +  "-dot-"+  project + ".appspot.com";
+      return "https://" + version + "-dot-" + service +  "-dot-"+  projectId + domain;
     }
   }
 
@@ -302,7 +316,7 @@ public class StandardDeployJob extends WorkspaceJob {
     }
   }
 
-  private class StringBuilderProcessOutputLineListener implements ProcessOutputLineListener {
+  private static class StringBuilderProcessOutputLineListener implements ProcessOutputLineListener {
     private final StringBuffer buffer = new StringBuffer();
 
     public StringBuilderProcessOutputLineListener() {

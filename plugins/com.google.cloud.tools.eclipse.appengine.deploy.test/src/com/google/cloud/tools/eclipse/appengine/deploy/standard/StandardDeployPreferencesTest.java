@@ -21,21 +21,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.eclipse.test.util.project.TestProjectCreator;
 import org.eclipse.core.resources.IProject;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.cloud.tools.eclipse.test.util.project.TestProjectCreator;
-
 public class StandardDeployPreferencesTest {
 
   @Rule public final TestProjectCreator projectCreator = new TestProjectCreator();
-  
+  private final StandardDeployPreferences defaultPreferences =
+      StandardDeployPreferences.getDefaultPreferences();
+
   @Test
   public void testDefaultProjectId() {
-    assertThat(StandardDeployPreferences.DEFAULT.getProjectId(), isEmptyString());
+    assertThat(defaultPreferences.getProjectId(), isEmptyString());
   }
-  
+
   @Test
   public void testSetProjectId() {
     IProject project = projectCreator.getProject();
@@ -49,22 +50,27 @@ public class StandardDeployPreferencesTest {
 
   @Test
   public void testDefaultVersion() {
-    assertThat(StandardDeployPreferences.DEFAULT.getVersion(), isEmptyString());
+    assertThat(defaultPreferences.getVersion(), isEmptyString());
   }
 
   @Test
   public void testDefaultAutoPromote() {
-    assertTrue(StandardDeployPreferences.DEFAULT.isAutoPromote());
+    assertTrue(defaultPreferences.isAutoPromote());
   }
 
   @Test
   public void testDefaultBucket() {
-    assertThat(StandardDeployPreferences.DEFAULT.getBucket(), isEmptyString());
+    assertThat(defaultPreferences.getBucket(), isEmptyString());
   }
 
   @Test
   public void testDefaultStopPreviousVersion() {
-    assertTrue(StandardDeployPreferences.DEFAULT.isStopPreviousVersion());
+    assertTrue(defaultPreferences.isStopPreviousVersion());
+  }
+
+  @Test
+  public void testIncludeOptionalConfigurationFiles() {
+    assertTrue(defaultPreferences.isIncludeOptionalConfigurationFiles());
   }
 
 }

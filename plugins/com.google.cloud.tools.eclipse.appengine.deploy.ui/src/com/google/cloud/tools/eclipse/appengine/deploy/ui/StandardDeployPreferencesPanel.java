@@ -17,21 +17,28 @@
 package com.google.cloud.tools.eclipse.appengine.deploy.ui;
 
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.ProjectSelectorSelectionChangedListener;
 import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
 import com.google.cloud.tools.eclipse.login.ui.AccountSelector;
 import com.google.cloud.tools.eclipse.login.ui.AccountSelectorObservableValue;
 import com.google.cloud.tools.eclipse.projectselector.ProjectRepository;
-import com.google.cloud.tools.eclipse.projectselector.GcpProject;
 import com.google.cloud.tools.eclipse.projectselector.ProjectRepositoryException;
 import com.google.cloud.tools.eclipse.projectselector.ProjectSelector;
+import com.google.cloud.tools.eclipse.projectselector.model.GcpProject;
 import com.google.cloud.tools.eclipse.ui.util.FontUtil;
 import com.google.cloud.tools.eclipse.ui.util.databinding.BucketNameValidator;
 import com.google.cloud.tools.eclipse.ui.util.databinding.ProjectVersionValidator;
-import com.google.cloud.tools.eclipse.util.status.StatusUtil;
+import com.google.cloud.tools.eclipse.ui.util.event.OpenUriSelectionListener;
+import com.google.cloud.tools.eclipse.ui.util.event.OpenUriSelectionListener.ErrorDialogErrorHandler;
+import com.google.cloud.tools.eclipse.ui.util.event.OpenUriSelectionListener.QueryParameterProvider;
+import com.google.cloud.tools.eclipse.ui.util.images.SharedImages;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.core.databinding.Binding;
@@ -42,28 +49,33 @@ import org.eclipse.core.databinding.beans.PojoProperties;
 import org.eclipse.core.databinding.conversion.Converter;
 import org.eclipse.core.databinding.observable.Observables;
 import org.eclipse.core.databinding.observable.list.IObservableList;
+import org.eclipse.core.databinding.observable.value.ComputedValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.core.databinding.validation.MultiValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.databinding.swt.ISWTObservableValue;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.databinding.viewers.IViewerObservableValue;
 import org.eclipse.jface.databinding.viewers.ViewerProperties;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.ExpansionAdapter;
 import org.eclipse.ui.forms.events.ExpansionEvent;
@@ -74,6 +86,8 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
 
   private static final String APPENGINE_VERSIONS_URL =
       "https://console.cloud.google.com/appengine/versions";
+  private static final String CREATE_GCP_PROJECT_WITH_GAE_URL =
+      "https://console.cloud.google.com/projectselector/appengine/create?lang=java";
 
   private static final Logger logger = Logger.getLogger(
       StandardDeployPreferencesPanel.class.getName());
@@ -88,9 +102,13 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
 
   private Button stopPreviousVersionButton;
 
+  private Button includeOptionalConfigurationFilesButton;
+
   private Text bucket;
 
   private ExpandableComposite expandableComposite;
+
+  private Image refreshIcon;
 
   @VisibleForTesting
   DeployPreferencesModel model;
@@ -115,6 +133,8 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
 
     this.projectRepository = projectRepository;
 
+    refreshIcon = SharedImages.REFRESH_IMAGE_DESCRIPTOR.createImage(getDisplay());
+
     createCredentialSection(loginService);
 
     createProjectIdSection();
@@ -122,6 +142,8 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     createProjectVersionSection();
 
     createPromoteSection();
+
+    createOptionalConfigurationFilesSection();
 
     createAdvancedSection();
 
@@ -138,9 +160,10 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     bindingContext = new DataBindingContext();
 
     setupAccountEmailDataBinding(bindingContext);
-    setupProjectIdDataBinding(bindingContext);
+    setupProjectSelectorDataBinding(bindingContext);
     setupProjectVersionDataBinding(bindingContext);
     setupAutoPromoteDataBinding(bindingContext);
+    setupOptionalConfigurationFilesDataBinding(bindingContext);
     setupBucketDataBinding(bindingContext);
 
     observables = new ObservablesManager();
@@ -153,12 +176,12 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     UpdateValueStrategy modelToTarget =
         new UpdateValueStrategy().setConverter(new Converter(String.class, String.class) {
           @Override
-          public Object convert(Object expectedEmail) {
-            // Expected to be an email address, but must also ensure is a currently logged-in
-            // account
-            if (expectedEmail instanceof String
-                && accountSelector.isEmailAvailable((String) expectedEmail)) {
-              return expectedEmail;
+          public Object convert(Object savedEmail) {
+            Preconditions.checkArgument(savedEmail instanceof String);
+            if (accountSelector.isEmailAvailable((String) savedEmail)) {
+              return savedEmail;
+            } else if (requireValues && accountSelector.getAccountCount() == 1) {
+              return accountSelector.getFirstEmail();
             } else {
               return null;
             }
@@ -180,12 +203,24 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
         accountSelectorObservableValue));
   }
 
-  private void setupProjectIdDataBinding(DataBindingContext context) {
-    IViewerObservableValue projectList = ViewerProperties.singleSelection().observe(projectSelector.getViewer());
+  private void setupProjectSelectorDataBinding(DataBindingContext context) {
+    IViewerObservableValue projectInput =
+        ViewerProperties.input().observe(projectSelector.getViewer());
+    IViewerObservableValue projectSelection =
+        ViewerProperties.singleSelection().observe(projectSelector.getViewer());
+    context.addValidationStatusProvider(
+        new ProjectSelectionValidator(projectInput, projectSelection, requireValues));
+
+    IViewerObservableValue projectList =
+        ViewerProperties.singleSelection().observe(projectSelector.getViewer());
     IObservableValue projectIdModel = PojoProperties.value("projectId").observe(model);
-    context.bindValue(projectList, projectIdModel,
-                      new UpdateValueStrategy().setConverter(new GcpProjectToProjectIdConverter()),
-                      new UpdateValueStrategy().setConverter(new ProjectIdToGcpProjectConverter()));
+
+    UpdateValueStrategy gcpProjectToProjectId =
+        new UpdateValueStrategy().setConverter(new GcpProjectToProjectIdConverter());
+    UpdateValueStrategy projectIdToGcpProject =
+        new UpdateValueStrategy().setConverter(new ProjectIdToGcpProjectConverter());
+
+    context.bindValue(projectList, projectIdModel, gcpProjectToProjectId, projectIdToGcpProject);
   }
 
   private void setupProjectVersionDataBinding(DataBindingContext context) {
@@ -199,24 +234,62 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
   }
 
   private void setupAutoPromoteDataBinding(DataBindingContext context) {
-    ISWTObservableValue promoteButton = WidgetProperties.selection().observe(autoPromoteButton);
-    ISWTObservableValue stopPreviousVersion =
+    ISWTObservableValue promoteButton =
+        WidgetProperties.selection().observe(autoPromoteButton);
+    final ISWTObservableValue stopPreviousVersion =
         WidgetProperties.selection().observe(stopPreviousVersionButton);
-    ISWTObservableValue stopPreviousVersionEnablement =
+    final ISWTObservableValue stopPreviousVersionEnablement =
         WidgetProperties.enabled().observe(stopPreviousVersionButton);
 
-    // use an intermediary value to control the enabled state of stopPreviousVersionButton
-    // based on the promote checkbox's state
-    WritableValue enablement = new WritableValue();
-    context.bindValue(promoteButton, enablement);
-    context.bindValue(stopPreviousVersionEnablement, enablement);
+    context.bindValue(stopPreviousVersionEnablement, promoteButton);
 
     IObservableValue promoteModel = PojoProperties.value("autoPromote").observe(model);
     IObservableValue stopPreviousVersionModel =
         PojoProperties.value("stopPreviousVersion").observe(model);
 
     context.bindValue(promoteButton, promoteModel);
-    context.bindValue(stopPreviousVersion, stopPreviousVersionModel);
+
+    // Intermediary model necessary for "Restore Defaults" to work.
+    final IObservableValue currentStopPreviousVersionChoice = new WritableValue();
+    context.bindValue(currentStopPreviousVersionChoice, stopPreviousVersionModel);
+
+    // One-way update: button selection <-- latest user choice
+    // Update the button (to match the user choice), if enabled; if not, force unchecking.
+    context.bindValue(stopPreviousVersion, new ComputedValue() {
+      @Override
+      protected Object calculate() {
+        boolean buttonEnabled = (boolean) stopPreviousVersionEnablement.getValue();
+        boolean currentValue = (boolean) currentStopPreviousVersionChoice.getValue();
+        if (!buttonEnabled) {
+          return Boolean.FALSE;  // Force unchecking the stop previous button if it is disabled.
+        }
+        return currentValue;  // Otherwise, check the button according to the latest user choice.
+      }
+    }, new UpdateValueStrategy(UpdateValueStrategy.POLICY_NEVER), null);
+
+    // One-way update: button selection --> latest user choice
+    // Update the user choice (to match the button selection), only when the button is enabled.
+    context.bindValue(new ComputedValue() {
+      @Override
+      protected Object calculate() {
+        boolean buttonEnabled = (boolean) stopPreviousVersionEnablement.getValue();
+        boolean buttonValue = (boolean) stopPreviousVersion.getValue();
+        boolean currentValue = (boolean) currentStopPreviousVersionChoice.getValue();
+        if (buttonEnabled) {
+          return buttonValue;  // Remember the button state as the latest choice if it is enabled.
+        }
+        return currentValue;  // Otherwise, retain the latest (current) user choice.
+      }
+    }, stopPreviousVersionModel, null, new UpdateValueStrategy(UpdateValueStrategy.POLICY_NEVER));
+  }
+
+  private void setupOptionalConfigurationFilesDataBinding(DataBindingContext context) {
+    ISWTObservableValue buttonValue =
+        WidgetProperties.selection().observe(includeOptionalConfigurationFilesButton);
+    IObservableValue modelValue =
+        PojoProperties.value("includeOptionalConfigurationFiles").observe(model);
+
+    context.bindValue(buttonValue, modelValue);
   }
 
   private void setupBucketDataBinding(DataBindingContext context) {
@@ -230,7 +303,7 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
   }
 
   @Override
-  public boolean savePreferences() {
+  boolean savePreferences() {
     try {
       model.savePreferences();
       return true;
@@ -258,9 +331,8 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     accountLabel.setText(Messages.getString("deploy.preferences.dialog.label.selectAccount"));
     accountLabel.setToolTipText(Messages.getString("tooltip.account"));
 
-    // If we don't require values, then don't auto-select accounts
     accountSelector = new AccountSelector(this, loginService,
-        Messages.getString("deploy.preferences.dialog.accountSelector.login"), requireValues);
+        Messages.getString("deploy.preferences.dialog.accountSelector.login"));
     accountSelector.setToolTipText(Messages.getString("tooltip.account"));
     GridData accountSelectorGridData = new GridData(SWT.FILL, SWT.CENTER, true, false);
     accountSelector.setLayoutData(accountSelectorGridData);
@@ -270,17 +342,52 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     Label projectIdLabel = new Label(this, SWT.LEAD);
     projectIdLabel.setText(Messages.getString("project"));
     projectIdLabel.setToolTipText(Messages.getString("tooltip.project.id"));
-    GridDataFactory.swtDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(projectIdLabel);
-    projectSelector = new ProjectSelector(this);
-    GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER)
-      .grab(true, false).hint(300, 100).applyTo(projectSelector);
-    accountSelector.addSelectionListener(new Runnable() {
+    GridDataFactory.swtDefaults().align(SWT.BEGINNING, SWT.BEGINNING).span(1, 2)
+        .applyTo(projectIdLabel);
+
+    Link createNewProject = new Link(this, SWT.NONE);
+    createNewProject.setText(Messages.getString("projectselector.createproject",
+                                                CREATE_GCP_PROJECT_WITH_GAE_URL));
+    createNewProject.setToolTipText(Messages.getString("projectselector.createproject.tooltip"));
+    FontUtil.convertFontToItalic(createNewProject);
+    createNewProject.addSelectionListener(
+        new OpenUriSelectionListener(new QueryParameterProvider() {
+          @Override
+          public Map<String, String> getParameters() {
+            if (accountSelector.getSelectedEmail().isEmpty()) {
+              return Collections.emptyMap();
+            } else {
+              return Collections.singletonMap("authuser", accountSelector.getSelectedEmail());
+            }
+          }
+        }, new ErrorDialogErrorHandler(getShell())));
+    GridDataFactory.swtDefaults().applyTo(createNewProject);
+
+    Composite projectSelectorComposite = new Composite(this, SWT.NONE);
+    GridLayoutFactory.fillDefaults().numColumns(2).spacing(0, 0).applyTo(projectSelectorComposite);
+    GridDataFactory.fillDefaults().grab(true, false).applyTo(projectSelectorComposite);
+
+    projectSelector = new ProjectSelector(projectSelectorComposite);
+    GridDataFactory.fillDefaults().grab(true, false).hint(SWT.DEFAULT, 200)
+        .applyTo(projectSelector);
+
+    final Button refreshProjectsButton = new Button(projectSelectorComposite, SWT.NONE);
+    refreshProjectsButton.setImage(refreshIcon);
+    GridDataFactory.swtDefaults().align(SWT.END, SWT.BEGINNING).applyTo(refreshProjectsButton);
+    refreshProjectsButton.addSelectionListener(new SelectionAdapter() {
       @Override
-      public void run() {
-        Credential selectedCredential = accountSelector.getSelectedCredential();
-        projectSelector.setProjects(retrieveProjects(selectedCredential));
+      public void widgetSelected(SelectionEvent event) {
+        refreshProjectsForSelectedCredential();
       }
     });
+
+    accountSelector.addSelectionListener(
+        new RefreshProjectOnAccountSelection(refreshProjectsButton));
+
+    projectSelector.addSelectionChangedListener(
+        new ProjectSelectorSelectionChangedListener(accountSelector,
+                                                    projectRepository,
+                                                    projectSelector));
   }
 
   private void createProjectVersionSection() {
@@ -314,6 +421,16 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     stopPreviousVersionButton.setLayoutData(stopPreviousVersionButtonGridData);
   }
 
+  private void createOptionalConfigurationFilesSection() {
+    includeOptionalConfigurationFilesButton = new Button(this, SWT.CHECK);
+    includeOptionalConfigurationFilesButton.setText(Messages.getString("deploy.config.files"));
+    includeOptionalConfigurationFilesButton.setToolTipText(
+        Messages.getString("tooltip.deploy.config.files"));
+    GridData gridData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+    gridData.horizontalSpan = 2;
+    includeOptionalConfigurationFilesButton.setLayoutData(gridData);
+  }
+
   private void createAdvancedSection() {
     createExpandableComposite();
     final Composite bucketComposite = createBucketSection(expandableComposite);
@@ -321,7 +438,7 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     expandableComposite.setClient(bucketComposite);
     expandableComposite.addExpansionListener(new ExpansionAdapter() {
       @Override
-      public void expansionStateChanged(ExpansionEvent e) {
+      public void expansionStateChanged(ExpansionEvent event) {
         handleExpansionStateChanged();
       }
     });
@@ -357,21 +474,44 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     return bucketComposite;
   }
 
-  private List<GcpProject> retrieveProjects(Credential selectedCredential) {
-    try {
-      if (selectedCredential == null) {
-        return Collections.emptyList();
-      }
-      return projectRepository.getProjects(selectedCredential);
-    } catch (ProjectRepositoryException ex) {
-      ErrorDialog.openError(getShell(),
-                            Messages.getString("projectselector.retrieveproject.error.title"),
-                            Messages.getString("projectselector.retrieveproject.error.message",
-                                               ex.getLocalizedMessage()),
-                            StatusUtil.error(this,
-                                             Messages.getString("projectselector.retrieveproject.error.title"),
-                                             ex));
-      return Collections.emptyList();
+  private Job latestGcpProjectQueryJob;  // Must be updated/accessed in the UI context.
+
+  private Predicate<Job> isLatestQueryJob = new Predicate<Job>() {
+    @Override
+    public boolean apply(Job job) {
+      return job == latestGcpProjectQueryJob;
+    }
+  };
+
+  @VisibleForTesting
+  Job getLatestGcpProjectQueryJob() {
+    return latestGcpProjectQueryJob;
+  }
+
+  private void refreshProjectsForSelectedCredential() {
+    projectSelector.setProjects(Collections.<GcpProject>emptyList());
+    latestGcpProjectQueryJob = null;
+
+    Credential selectedCredential = accountSelector.getSelectedCredential();
+    if (selectedCredential != null) {
+      latestGcpProjectQueryJob = new GcpProjectQueryJob(selectedCredential,
+          projectRepository, projectSelector, bindingContext, isLatestQueryJob);
+      latestGcpProjectQueryJob.schedule();
+    }
+  }
+
+  public final class RefreshProjectOnAccountSelection implements Runnable {
+
+    private final Button refreshProjectsButton;
+
+    public RefreshProjectOnAccountSelection(Button refreshProjectsButton) {
+      this.refreshProjectsButton = refreshProjectsButton;
+    }
+
+    @Override
+    public void run() {
+      refreshProjectsForSelectedCredential();
+      refreshProjectsButton.setEnabled(accountSelector.getSelectedCredential() != null);
     }
   }
 
@@ -386,10 +526,12 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
       if (fromObject == null) {
         return null;
       }
+
+      Preconditions.checkArgument(fromObject instanceof String);
       try {
         return projectRepository.getProject(accountSelector.getSelectedCredential(),
                                            (String) fromObject);
-      } catch (ProjectRepositoryException e) {
+      } catch (ProjectRepositoryException ex) {
         return null;
       }
     }
@@ -406,7 +548,45 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
       if (fromObject == null) {
         return null;
       }
+
+      Preconditions.checkArgument(fromObject instanceof GcpProject);
       return ((GcpProject) fromObject).getId();
+    }
+  }
+
+  static class ProjectSelectionValidator extends FixedMultiValidator {
+
+    private final IViewerObservableValue projectInput;
+    private final IViewerObservableValue projectSelection;
+    private final boolean requireValues;
+
+    private ProjectSelectionValidator(IViewerObservableValue projectInput,
+                                      IViewerObservableValue projectSelection,
+                                      boolean requireValues) {
+      this.projectInput = projectInput;
+      this.projectSelection = projectSelection;
+      this.requireValues = requireValues;
+    }
+
+    @Override
+    protected IStatus validate() {
+      // this access is recorded and ensures that changes are tracked, don't move it inside the if
+      Collection<?> projects = (Collection<?>) projectInput.getValue();
+      // this access is recorded and ensures that changes are tracked, don't move it inside the if
+      Object selectedProject = projectSelection.getValue();
+      if (projects.isEmpty()) {
+        if (requireValues) {
+          return ValidationStatus.error(Messages.getString("projectselector.no.projects")); //$NON-NLS-1$
+        } else {
+          return ValidationStatus.info(Messages.getString("projectselector.no.projects")); //$NON-NLS-1$
+        }
+      }
+      if (requireValues) {
+        if (selectedProject == null) {
+          return ValidationStatus.error(Messages.getString("projectselector.project.not.selected")); //$NON-NLS-1$
+        }
+      }
+      return ValidationStatus.ok();
     }
   }
 
@@ -456,12 +636,12 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
   };
 
   @Override
-  public DataBindingContext getDataBindingContext() {
+  DataBindingContext getDataBindingContext() {
     return bindingContext;
   }
 
   @Override
-  public void resetToDefaults() {
+  void resetToDefaults() {
     model.resetToDefaults();
     bindingContext.updateTargets();
   }
@@ -473,6 +653,9 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     }
     if (observables != null) {
       observables.dispose();
+    }
+    if (refreshIcon != null) {
+      refreshIcon.dispose();
     }
     super.dispose();
   }
@@ -490,7 +673,8 @@ public class StandardDeployPreferencesPanel extends DeployPreferencesPanel {
     FontUtil.convertFontToBold(expandableComposite);
   }
 
-  boolean hasSelection() {
-    return projectSelector.hasSelection();
+  @Override
+  String getHelpContextId() {
+    return "com.google.cloud.tools.eclipse.appengine.deploy.ui.DeployAppEngineStandardProjectContext"; //$NON-NLS-1$
   }
 }

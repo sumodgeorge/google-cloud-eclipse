@@ -20,10 +20,9 @@ import com.google.cloud.tools.eclipse.appengine.libraries.ILibraryClasspathConta
 import com.google.cloud.tools.eclipse.appengine.libraries.LibraryClasspathContainer;
 import com.google.cloud.tools.eclipse.appengine.libraries.Messages;
 import com.google.cloud.tools.eclipse.appengine.libraries.SourceAttacherJob;
+import com.google.cloud.tools.eclipse.appengine.libraries.model.CloudLibraries;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.Filter;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.Library;
-import com.google.cloud.tools.eclipse.appengine.libraries.model.LibraryFactory;
-import com.google.cloud.tools.eclipse.appengine.libraries.model.LibraryFactoryException;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.LibraryFile;
 import com.google.cloud.tools.eclipse.appengine.libraries.persistence.LibraryClasspathContainerSerializer;
 import com.google.cloud.tools.eclipse.util.status.StatusUtil;
@@ -33,16 +32,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.maven.artifact.Artifact;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -63,24 +56,19 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 @Component
-public class LibraryClasspathContainerResolverService 
-                                       implements ILibraryClasspathContainerResolverService {
+public class LibraryClasspathContainerResolverService
+    implements ILibraryClasspathContainerResolverService {
 
   private static final String CLASSPATH_ATTRIBUTE_SOURCE_URL =
       "com.google.cloud.tools.eclipse.appengine.libraries.sourceUrl";
 
-  private static final Logger logger =
-      Logger.getLogger(LibraryClasspathContainerResolverService.class.getName());
-
   private ILibraryRepositoryService repositoryService;
-  private IExtensionRegistry extensionRegistry;
-  private LibraryFactory libraryFactory;
   private LibraryClasspathContainerSerializer serializer;
-  private Map<String, Library> libraries;
 
+  @Override
   public IStatus resolveAll(IJavaProject javaProject, IProgressMonitor monitor) {
-    IStatus status = null;
     try {
+      IStatus status = Status.OK_STATUS;
       IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
       SubMonitor subMonitor = SubMonitor.convert(monitor,
                                                  Messages.getString("TaskResolveLibraries"),
@@ -92,33 +80,34 @@ public class LibraryClasspathContainerResolverService
                                                              subMonitor.newChild(1)));
         }
       }
+      return status;
     } catch (CoreException ex) {
       return StatusUtil.error(this, Messages.getString("TaskResolveLibrariesError"), ex);
     }
-    return status == null ? Status.OK_STATUS : status;
   }
 
+  @Override
   public IClasspathEntry[] resolveLibraryAttachSourcesSync(String libraryId) throws CoreException {
-    Library library = libraries.get(libraryId);
-    if (library != null) {
-      IClasspathEntry[] resolvedEntries = new IClasspathEntry[library.getLibraryFiles().size()];
-      int idx = 0;
-      for (LibraryFile libraryFile : library.getLibraryFiles()) {
-        resolvedEntries[idx++] = resolveLibraryFileAttachSourceSync(libraryFile);
-      }
-      return resolvedEntries;
-    } else {
+    Library library = CloudLibraries.getLibrary(libraryId);
+    if (library == null) {
       throw new CoreException(StatusUtil.error(this, Messages.getString("InvalidLibraryId",
-                                                                        libraryId)));
+          libraryId)));
     }
+
+    List<IClasspathEntry> resolvedEntries = new ArrayList<>();
+    for (LibraryFile libraryFile : library.getLibraryFiles()) {
+      resolvedEntries.add(resolveLibraryFileAttachSourceSync(libraryFile));
+    }
+    return resolvedEntries.toArray(new IClasspathEntry[0]);
   }
 
-  public IStatus resolveContainer(IJavaProject javaProject, IPath containerPath, 
+  @Override
+  public IStatus resolveContainer(IJavaProject javaProject, IPath containerPath,
                                   IProgressMonitor monitor) {
     Preconditions.checkArgument(containerPath.segment(0).equals(Library.CONTAINER_PATH_PREFIX));
     try {
       String libraryId = containerPath.segment(1);
-      Library library = libraries.get(libraryId);
+      Library library = CloudLibraries.getLibrary(libraryId);
       if (library != null) {
         List<Job> sourceAttacherJobs = new ArrayList<>();
         LibraryClasspathContainer container = resolveLibraryFiles(javaProject, containerPath,
@@ -135,10 +124,12 @@ public class LibraryClasspathContainerResolverService
       }
       return Status.OK_STATUS;
     } catch (CoreException | IOException ex) {
-      return StatusUtil.error(this, Messages.getString("TaskResolveContainerError", containerPath), ex);
+      return StatusUtil.error(this, Messages.getString("TaskResolveContainerError", containerPath),
+          ex);
     }
   }
 
+  @Override
   public IStatus checkRuntimeAvailability(AppEngineRuntime runtime, IProgressMonitor monitor) {
     switch (runtime) {
       case STANDARD_JAVA_7:
@@ -151,7 +142,7 @@ public class LibraryClasspathContainerResolverService
   private IStatus checkAppEngineStandardJava7(IProgressMonitor monitor) {
     try {
       for (String libraryId : new String[]{ "servlet-api", "jsp-api"}) {
-        Library library = libraries.get(libraryId);
+        Library library = CloudLibraries.getLibrary(libraryId);
         for (LibraryFile libraryFile : library.getLibraryFiles()) {
           if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
@@ -169,20 +160,19 @@ public class LibraryClasspathContainerResolverService
                                                         IPath containerPath,
                                                         Library library,
                                                         List<Job> sourceAttacherJobs,
-                                                        IProgressMonitor monitor) 
+                                                        IProgressMonitor monitor)
                                                             throws CoreException {
     List<LibraryFile> libraryFiles = library.getLibraryFiles();
     SubMonitor subMonitor = SubMonitor.convert(monitor, libraryFiles.size());
     subMonitor.subTask(Messages.getString("TaskResolveArtifacts", getLibraryDescription(library)));
     SubMonitor child = subMonitor.newChild(libraryFiles.size());
 
-    IClasspathEntry[] entries = new IClasspathEntry[libraryFiles.size()];
-    int idx = 0;
+    List<IClasspathEntry> entries = new ArrayList<>();
     for (final LibraryFile libraryFile : libraryFiles) {
       IClasspathEntry newLibraryEntry =
           resolveLibraryFileAttachSourceAsync(javaProject, containerPath, libraryFile,
                                               sourceAttacherJobs, monitor);
-      entries[idx++] = newLibraryEntry;
+      entries.add(newLibraryEntry);
       child.worked(1);
     }
     monitor.done();
@@ -194,17 +184,17 @@ public class LibraryClasspathContainerResolverService
 
   private IClasspathEntry resolveLibraryFileAttachSourceAsync(IJavaProject javaProject,
                                                               IPath containerPath,
-                                                              final LibraryFile libraryFile,
+                                                              LibraryFile libraryFile,
                                                               List<Job> sourceAttacherJobs,
-                                                              final IProgressMonitor monitor)
+                                                              IProgressMonitor monitor)
                                                                   throws CoreException {
-    final Artifact artifact = repositoryService.resolveArtifact(libraryFile, monitor);
+    Artifact artifact = repositoryService.resolveArtifact(libraryFile, monitor);
     IPath libraryPath = new Path(artifact.getFile().getAbsolutePath());
     IPath sourceAttachmentPath = null;
     Job job = createSourceAttacherJob(javaProject, containerPath, libraryFile,
                                       monitor, artifact, libraryPath);
     sourceAttacherJobs.add(job);
-    final IClasspathEntry newLibraryEntry =
+    IClasspathEntry newLibraryEntry =
         JavaCore.newLibraryEntry(libraryPath,
                                  sourceAttachmentPath,
                                  null /*  sourceAttachmentRootPath */,
@@ -230,8 +220,10 @@ public class LibraryClasspathContainerResolverService
   }
 
   private IClasspathEntry resolveLibraryFileAttachSourceSync(final LibraryFile libraryFile)
-                                                                              throws CoreException {
-    final Artifact artifact = repositoryService.resolveArtifact(libraryFile, new NullProgressMonitor());
+      throws CoreException {
+
+    final Artifact artifact =
+        repositoryService.resolveArtifact(libraryFile, new NullProgressMonitor());
     IPath libraryPath = new Path(artifact.getFile().getAbsolutePath());
     IPath sourceAttachmentPath = null;
     sourceAttachmentPath = repositoryService.resolveSourceArtifact(libraryFile,
@@ -274,19 +266,7 @@ public class LibraryClasspathContainerResolverService
 
   @Activate
   protected void initialize() {
-    libraryFactory = new LibraryFactory();
     serializer = new LibraryClasspathContainerSerializer();
-    IConfigurationElement[] configurationElements =
-        extensionRegistry.getConfigurationElementsFor(LIBRARIES_EXTENSION_POINT);
-    libraries = new HashMap<>(configurationElements.length);
-    for (IConfigurationElement configurationElement : configurationElements) {
-      try {
-        Library library = libraryFactory.create(configurationElement);
-        libraries.put(library.getId(), library);
-      } catch (LibraryFactoryException exception) {
-        logger.log(Level.SEVERE, "Failed to initialize libraries", exception); //$NON-NLS-1$
-      }
-    }
   }
 
   private static IAccessRule[] getAccessRules(List<Filter> filters) {
@@ -330,7 +310,7 @@ public class LibraryClasspathContainerResolverService
       // disregard invalid URL
     }
   }
-  
+
   @Reference
   public void setRepositoryService(ILibraryRepositoryService repositoryService) {
     this.repositoryService = repositoryService;
@@ -342,14 +322,4 @@ public class LibraryClasspathContainerResolverService
     }
   }
 
-  @Reference
-  public void setExtensionRegistry(IExtensionRegistry extensionRegistry) {
-    this.extensionRegistry = extensionRegistry;
-  }
-
-  public void unsetExtensionRegistry(IExtensionRegistry extensionRegistry) {
-    if (this.extensionRegistry == extensionRegistry) {
-      this.extensionRegistry = null;
-    }
-  }
 }

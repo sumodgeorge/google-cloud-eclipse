@@ -16,44 +16,100 @@
 
 package com.google.cloud.tools.eclipse.appengine.validation;
 
+import java.util.Objects;
+
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.jface.text.quickassist.IQuickAssistProcessor;
+import org.eclipse.wst.validation.internal.provisional.core.IMessage;
+
 import com.google.common.base.Preconditions;
 
 /**
- * A blacklisted element found in appengine-web.xml
+ * A blacklisted element that will receive a problem marker. 
  */
-public class BannedElement {
+class BannedElement {
 
   private final String message;
   private final DocumentLocation start;
   private final int length;
+  private final String markerId;
+  private final int iMarkerSeverity;
+  private final int iMessageSeverity;
+  private IQuickAssistProcessor processor;
 
   /**
    * @param length the length of the marker underline. Length == 0 results in a
    *        marker in the vertical ruler and no underline
    */
-  public BannedElement(String elementName, DocumentLocation start, int length) {
-    Preconditions.checkNotNull(elementName, "elementName is null");
+  BannedElement(String message, String markerId, int iMarkerSeverity, int iMessageSeverity,
+      DocumentLocation start, int length, IQuickAssistProcessor processor) {
+    Preconditions.checkNotNull(message, "element name is null");
+    Preconditions.checkNotNull(markerId, "markerId is null");
     Preconditions.checkNotNull(start, "start is null");
     Preconditions.checkArgument(length >= 0, "length < 0");
-    this.message = AppEngineWebBlacklist.getBlacklistElementMessage(elementName);
+    this.message = message;
     this.start = start;
     this.length = length;
+    this.markerId = markerId;
+    this.iMarkerSeverity = iMarkerSeverity;
+    this.iMessageSeverity = iMessageSeverity;
+    this.processor = processor;
   }
 
-  public BannedElement(String elementName) {
-    this(elementName, new DocumentLocation(0, 0), 0);
+  BannedElement(String message) {
+    this(message, "org.eclipse.core.resources.problemmarker",
+        IMarker.SEVERITY_WARNING, IMessage.NORMAL_SEVERITY, new DocumentLocation(0, 0), 0, null);
   }
 
-  public String getMessage() {
+  String getMessage() {
     return message;
   }
 
-  public DocumentLocation getStart() {
+  DocumentLocation getStart() {
     return start;
   }
 
-  public int getLength() {
+  int getLength() {
     return length;
   }
-
+  
+  String getMarkerId() {
+    return markerId;
+  }
+  
+  int getIMarkerSeverity() {
+    return iMarkerSeverity;
+  }
+  int getIMessageSeverity() {
+    return iMessageSeverity;
+  }
+  
+  IQuickAssistProcessor getQuickAssistProcessor() {
+    return processor;
+  }
+  
+  /**
+   * BannedElements are equal if they represent the same marker type (marker ID),
+   * have the same location within a document, and will display the same message.
+   */
+  @Override
+  public boolean equals(Object object) {
+    if (object == this) {
+      return true;
+    }
+    if (object == null || !(object instanceof BannedElement)) {
+      return false;
+    } 
+    BannedElement element = (BannedElement) object;
+    return Objects.equals(markerId, element.getMarkerId()) &&
+        Objects.equals(message, element.getMessage()) &&
+        start.getLineNumber() == element.getStart().getLineNumber() &&
+        start.getColumnNumber() == element.getStart().getColumnNumber();
+  }
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(markerId, message, start.getLineNumber(), start.getColumnNumber());
+  }
+  
 }

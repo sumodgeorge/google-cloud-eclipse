@@ -30,9 +30,6 @@ import org.eclipse.jdt.core.IJavaProject;
  */
 public interface ILibraryClasspathContainerResolverService {
 
-  public static final String LIBRARIES_EXTENSION_POINT =
-      "com.google.cloud.tools.eclipse.appengine.libraries"; //$NON-NLS-1$
-
   enum AppEngineRuntime {
     STANDARD_JAVA_7
   }
@@ -59,7 +56,7 @@ public interface ILibraryClasspathContainerResolverService {
 
 
   /**
-   * Verifies that dependencies of a given runtime are available either locally or can be downloaded
+   * Verifies that dependencies of a given runtime are available locally or can be downloaded.
    *
    * @return {@link Status#OK_STATUS} if all dependencies are available,
    * {@link Status#CANCEL_STATUS} if the operation was cancelled via the <code>monitor</code>, or a

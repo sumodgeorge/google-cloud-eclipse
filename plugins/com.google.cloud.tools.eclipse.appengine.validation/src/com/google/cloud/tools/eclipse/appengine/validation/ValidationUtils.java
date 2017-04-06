@@ -20,11 +20,14 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import java.util.Map;
-import java.util.Queue;
+import com.google.common.io.CharStreams;
 
 /**
  * Utility methods for validating XML files.
@@ -35,30 +38,32 @@ public class ValidationUtils {
   
   /**
    * Creates a {@link Map} of {@link BannedElement}s and their respective document-relative
-   * character offsets
+   * character offsets.
    */
   public static Map<BannedElement, Integer> getOffsetMap(byte[] bytes,
-      SaxParserResults parserResults) {
-    Queue<BannedElement> blacklist = parserResults.getBlacklist();
+      ArrayList<BannedElement> blacklist, String encoding) {
     Map<BannedElement, Integer> bannedElementOffsetMap = new HashMap<>();
-    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(bais, parserResults.getEncoding()))) {
-      int currentLine = 1;
-      int charOffset = 0;
-      while (!blacklist.isEmpty()) {
-        BannedElement element = blacklist.poll();
-        while (element.getStart().getLineNumber() > currentLine) {
+    for (BannedElement element : blacklist) {
+      ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+      try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(bais, encoding))) {
+        int charOffset = 0;
+        for (int i = 1; i < element.getStart().getLineNumber(); i++) {
           String line = reader.readLine();
           charOffset += line.length() + 1;
-          currentLine++;
         }
         int start = charOffset + element.getStart().getColumnNumber() - 1;
         bannedElementOffsetMap.put(element, start);
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, ex.getMessage());
       }
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, ex.getMessage());
     }
     return bannedElementOffsetMap;
   }
+  
+  static String convertStreamToString(InputStream is, String charset) throws IOException {
+    String result = CharStreams.toString(new InputStreamReader(is, charset));
+    return result;
+  }
+ 
 }
