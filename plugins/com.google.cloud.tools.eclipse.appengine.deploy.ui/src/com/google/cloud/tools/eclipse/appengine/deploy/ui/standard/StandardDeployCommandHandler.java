@@ -110,7 +110,6 @@ public class StandardDeployCommandHandler extends AbstractHandler {
 
   private static void launchDeployJob(IProject project, Credential credential)
                                                             throws IOException, ExecutionException {
-
     AnalyticsPingManager.getInstance().sendPing(
         AnalyticsEvents.APP_ENGINE_DEPLOY, AnalyticsEvents.APP_ENGINE_DEPLOY_STANDARD, null);
 
@@ -123,18 +122,23 @@ public class StandardDeployCommandHandler extends AbstractHandler {
 
     MessageConsoleStream outputStream = messageConsole.newMessageStream();
 
+    boolean includeOptionalConfigurationFiles =
+        new StandardDeployPreferences(project).isIncludeOptionalConfigurationFiles();
+
     StandardDeployJob deploy =
         new StandardDeployJob(project, credential, workDirectory,
                               new MessageConsoleWriterOutputLineListener(outputStream),
                               new MessageConsoleWriterOutputLineListener(outputStream),
-                              deployConfiguration);
+                              deployConfiguration, includeOptionalConfigurationFiles);
     messageConsole.setJob(deploy);
     deploy.addJobChangeListener(new JobChangeAdapter() {
 
       @Override
       public void done(IJobChangeEvent event) {
-        AnalyticsPingManager.getInstance().sendPing(AnalyticsEvents.APP_ENGINE_DEPLOY_SUCCESS,
-            AnalyticsEvents.APP_ENGINE_DEPLOY_STANDARD, null);
+        if (event.getResult().isOK()) {
+          AnalyticsPingManager.getInstance().sendPing(AnalyticsEvents.APP_ENGINE_DEPLOY_SUCCESS,
+              AnalyticsEvents.APP_ENGINE_DEPLOY_STANDARD, null);
+        }
         launchCleanupJob();
       }
     });
