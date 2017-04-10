@@ -16,19 +16,29 @@
 
 package com.google.cloud.tools.eclipse.appengine.validation;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
 
-import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Document;
+import java.util.Iterator;
 
-interface XmlValidationHelper {
+import org.junit.Test;
+
+public class JavaContextTest {
+    
+  private static final JavaContext CONTEXT = new JavaContext();
   
-  /**
-   * Searches the {@link Document} for banned elements and returns them
-   * as a list of {@link BannedElement}s.
-   */
-  ArrayList<BannedElement> checkForElements(IResource resource, Document document);
-
-  String getXsd();
+  @Test
+  public void testGetNamespaceUri() {
+    assertEquals("http://java.sun.com/xml/ns/javaee", CONTEXT.getNamespaceURI(""));
+  }
   
+  @Test
+  public void testGetPrefix() {
+    assertEquals("prefix", CONTEXT.getPrefix("http://java.sun.com/xml/ns/javaee"));
+  }
+  
+  @Test
+  public void testGetPrefixes() {
+    Iterator<String> iterator = CONTEXT.getPrefixes("http://java.sun.com/xml/ns/javaee");
+    assertEquals("prefix", iterator.next());
+  }
 }

@@ -16,19 +16,21 @@
 
 package com.google.cloud.tools.eclipse.appengine.validation;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
 
-import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Document;
+import org.eclipse.core.resources.IMarker;
+import org.junit.Test;
 
-interface XmlValidationHelper {
-  
-  /**
-   * Searches the {@link Document} for banned elements and returns them
-   * as a list of {@link BannedElement}s.
-   */
-  ArrayList<BannedElement> checkForElements(IResource resource, Document document);
+public class ServletMappingElementTest {
 
-  String getXsd();
-  
+  @Test
+  public void testServletMappingElement() {
+    DocumentLocation location = new DocumentLocation(3,15);
+    ServletMappingElement element = new ServletMappingElement("mapping", location, 17);
+    assertEquals("mapping", element.getServletClassName());
+    assertEquals(IMarker.SEVERITY_ERROR, element.getIMarkerSeverity());
+    assertEquals("mapping is not defined", element.getMessage());
+  }
+
 }
+

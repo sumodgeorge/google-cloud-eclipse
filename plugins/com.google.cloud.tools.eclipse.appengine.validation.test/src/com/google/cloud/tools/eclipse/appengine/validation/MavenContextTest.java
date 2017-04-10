@@ -16,19 +16,29 @@
 
 package com.google.cloud.tools.eclipse.appengine.validation;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
 
-import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Document;
+import java.util.Iterator;
 
-interface XmlValidationHelper {
+import org.junit.Test;
+
+public class MavenContextTest {
+    
+  private static final MavenContext CONTEXT = new MavenContext();
   
-  /**
-   * Searches the {@link Document} for banned elements and returns them
-   * as a list of {@link BannedElement}s.
-   */
-  ArrayList<BannedElement> checkForElements(IResource resource, Document document);
-
-  String getXsd();
+  @Test
+  public void testGetNamespaceUri() {
+    assertEquals("http://maven.apache.org/POM/4.0.0", CONTEXT.getNamespaceURI(""));
+  }
   
+  @Test
+  public void testGetPrefix() {
+    assertEquals("prefix", CONTEXT.getPrefix("http://maven.apache.org/POM/4.0.0"));
+  }
+  
+  @Test
+  public void testGetPrefixes() {
+    Iterator<String> iterator = CONTEXT.getPrefixes("http://maven.apache.org/POM/4.0.0");
+    assertEquals("prefix", iterator.next());
+  }
 }

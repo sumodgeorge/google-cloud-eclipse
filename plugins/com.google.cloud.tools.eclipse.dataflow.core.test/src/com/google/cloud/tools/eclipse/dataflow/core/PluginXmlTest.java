@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.eclipse.appengine.validation;
+package com.google.cloud.tools.eclipse.dataflow.core;
 
-import java.util.ArrayList;
+import com.google.cloud.tools.eclipse.test.util.BasePluginXmlTest;
 
-import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Document;
+public class PluginXmlTest extends BasePluginXmlTest {
 
-interface XmlValidationHelper {
-  
-  /**
-   * Searches the {@link Document} for banned elements and returns them
-   * as a list of {@link BannedElement}s.
-   */
-  ArrayList<BannedElement> checkForElements(IResource resource, Document document);
 
-  String getXsd();
-  
 }
