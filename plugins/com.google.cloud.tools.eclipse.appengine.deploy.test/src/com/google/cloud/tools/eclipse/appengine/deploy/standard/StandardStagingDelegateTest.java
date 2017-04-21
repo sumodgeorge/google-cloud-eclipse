@@ -51,7 +51,7 @@ public class StandardStagingDelegateTest {
   private IPath stagingDirectory;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     project = projectCreator.getProject();
     safeWorkDirectory = project.getFolder("safe-work-directory").getLocation();
     stagingDirectory = project.getFolder("staging-result").getLocation();

@@ -78,7 +78,7 @@ public class CloudSdkStagingHelperTest {
   private IProject project;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     project = projectCreator.getProject();
     stagingDirectory = new Path(tempFolder.getRoot().toString());
   }

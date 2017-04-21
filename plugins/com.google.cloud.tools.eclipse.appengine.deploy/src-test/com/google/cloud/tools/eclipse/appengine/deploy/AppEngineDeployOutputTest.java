@@ -25,7 +25,7 @@ import org.junit.rules.ExpectedException;
 public class AppEngineDeployOutputTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-
+  
   @Test
   public void testDeployOutputJsonParsingOneVersion() {
     String jsonOutput =
