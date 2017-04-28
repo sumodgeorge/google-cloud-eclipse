@@ -79,11 +79,10 @@ access the Eclipse Core Resources, like the workspace, nor the Eclipse UI.
 Setup requires a few steps:
 
   - The unit tests should be placed under `src-test`.
-  - Add the following lines to your `build.properties` to bring in JUnit,
+  - Add the following line to your `build.properties` to bring in JUnit,
     Mockito, Hamcrest, and any other requirements:
        ```
        additional.bundles = com.google.cloud.tools.eclipse.test.dependencies
-       jars.extra.classpath = platform:/plugin/com.google.cloud.tools.eclipse.test.dependencies
        ```
     Do not add `src-test` to the `build.properties` as it prevents Maven
     from using these classes as tests (as of Tycho 1.0, it seems).
