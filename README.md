@@ -96,7 +96,7 @@ Setup requires a few steps:
     Do not add `src-test` to the `build.properties` as it prevents Maven
     from using these classes as tests (as of Tycho 1.0, it seems).
   - From the project properties, select _Java Build Path_ and add a new
-    source folder for `src-test`, and whose output is placed in `target/tests-classes`.
+    source folder for `src-test`, and whose output is placed in `target/test-classes`.
       - note that these settings will be thrown away with M2Eclipse's
        _Update Projects_ or PDE's _Update Classpath_ commands.
 
