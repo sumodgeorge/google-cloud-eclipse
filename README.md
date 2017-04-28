@@ -79,8 +79,17 @@ access the Eclipse Core Resources, like the workspace, nor the Eclipse UI.
 Setup requires a few steps:
 
   - The unit tests should be placed under `src-test`.
+  - Add the following to the bundle's `pom.xml`:
+       ```
+       <build>
+       <testSourceDirectory>src-test</testSourceDirectory>
+       </build>
+       <dependencies>
+         ... any dependencies, like junit:junit ...
+       </dependencies>
+       ```
   - Add the following line to your `build.properties` to bring in JUnit,
-    Mockito, Hamcrest, and any other requirements:
+    Mockito, Hamcrest, and any other requirements, within Eclipse:
        ```
        additional.bundles = com.google.cloud.tools.eclipse.test.dependencies
        ```
@@ -90,12 +99,6 @@ Setup requires a few steps:
     source folder for `src-test`, and whose output is placed in `target/tests-classes`.
       - note that these settings will be thrown away with M2Eclipse's
        _Update Projects_ or PDE's _Update Classpath_ commands.
-  - Add the following to the bundle's `pom.xml`:
-       ```
-       <build>
-       <testSourceDirectory>src-test</testSourceDirectory>
-       </build>
-       ```
 
 ## Import into Eclipse
 
