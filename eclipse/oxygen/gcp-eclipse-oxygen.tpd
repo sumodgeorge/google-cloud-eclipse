@@ -49,7 +49,6 @@ location "http://download.eclipse.org/webtools/downloads/drops/R3.9.0/S-3.9.0M5-
 }
 
 location "http://download.eclipse.org/tools/orbit/downloads/drops/S20170120205402/repository/" {
-    org.hamcrest
 	ch.qos.logback.slf4j
 	org.slf4j.log4j
 }
