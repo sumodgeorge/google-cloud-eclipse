@@ -28,7 +28,6 @@ public class AppEngineDeployOutputTest {
   
   @Test
   public void testDeployOutputJsonParsingOneVersion() {
-    Assert.assertEquals("foo", "bar");
     String jsonOutput =
         "{\n" +
         "  \"configs\": [],\n" +
