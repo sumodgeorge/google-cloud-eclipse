@@ -11,7 +11,7 @@
   <xsl:template match="/">
   <xsl:text>
 </xsl:text>
-    <xsl:apply-templates select="*"/>
+    <xsl:apply-templates select="node()"/>
   </xsl:template>
 
   <xsl:template match="node()|@*">
