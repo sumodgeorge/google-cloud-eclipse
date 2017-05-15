@@ -60,16 +60,23 @@ public class FacetChangeListener implements IFacetedProjectListener {
       return;
     }
     addAppEngineWebBuilder(project.getProject());
-    IFile descriptor = findDescriptor(project);
+    IFile descriptor = findDescriptor(project, "appengine-web.xml");
     if (descriptor == null) {
       logger.warning(project + ": cannot find appengine-web.xml");
-        return;
-      }
+      return;
+    }
+    IFile webXml = findDescriptor(project, "web.xml");
+    if (webXml == null) {
+      logger.warning(project + ": cannot find web.xml");
+      return;
+    }
     if (project.hasProjectFacet(JavaFacet.VERSION_1_8)) {
       AppEngineDescriptorTransform.addJava8Runtime(descriptor);
+      AppEngineDescriptorTransform.addServlet31(webXml);
     } else {
       AppEngineDescriptorTransform.removeJava8Runtime(descriptor);
     }
+    
   }
 
   /**
@@ -127,11 +134,12 @@ public class FacetChangeListener implements IFacetedProjectListener {
 
   /**
    * Find the <code>appengine-web.xml</code> file.
+   * 
    * @return the file or {@code null} if not found
    */
-  private IFile findDescriptor(IFacetedProject project) {
+  private IFile findDescriptor(IFacetedProject project, String fileName) {
     IFile descriptor =
-        WebProjectUtil.findInWebInf(project.getProject(), new Path("appengine-web.xml"));
+        WebProjectUtil.findInWebInf(project.getProject(), new Path(fileName));
     return descriptor;
   }
 

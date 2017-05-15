@@ -54,4 +54,16 @@ public class AppEngineDescriptorTransform {
     }
   }
 
+  /**
+   * @param descriptor path to web.xml
+   */
+  public static void addServlet31(IFile descriptor) {
+    URL xslTemplate = AppEngineDescriptorTransform.class.getResource("/xslt/changeServletVersion.xsl");
+    try {
+      Xslt.transformInPlace(descriptor, xslTemplate);
+    } catch (IOException | CoreException | TransformerException ex) {
+      logger.log(Level.SEVERE, "Unable to add servlet 3.1 to " + descriptor, ex);
+    }
+  }
+
 }

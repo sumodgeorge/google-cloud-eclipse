@@ -34,17 +34,32 @@ import javax.xml.transform.TransformerException;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 /**
- * Test the appengine-web.xml XSLT transforms
+ * Test the descriptor XSLT transforms
  */
 public class AppEngineXsltTransformTest {
-
+ 
   @Test
-  public void testAddBare() {
+  public void testUpdateWebXml() throws IOException, TransformerException {
+    Document transformed = transform("/xslt/changeServletVersion.xsl",
+        "<web-app><display-name>Servlet 2.3 Web Application</display-name></web-app>");
+    Element documentElement = transformed.getDocumentElement();
+    assertEquals("web-app", documentElement.getNodeName());
+    assertEquals("http://xmlns.jcp.org/xml/ns/javaee/", documentElement.getNamespaceURI());
+    assertEquals("3.1", documentElement.getAttribute("version"));
+    
+    Node displayName = documentElement.getChildNodes().item(0);
+    assertEquals("http://xmlns.jcp.org/xml/ns/javaee/", displayName.getNamespaceURI());
+    assertEquals("Servlet 2.3 Web Application", displayName.getTextContent());
+  }
+  
+  @Test
+  public void testAddBare() throws IOException, TransformerException {
     Document transformed = transform("/xslt/addJava8Runtime.xsl",
         "<appengine-web-app xmlns=\"http://appengine.google.com/ns/1.0\"/>");
     assertEquals("java8", getRuntimeValue(transformed));
@@ -58,7 +73,7 @@ public class AppEngineXsltTransformTest {
   }
   
   @Test
-  public void testAddRuntimeAtEnd() {
+  public void testAddRuntimeAtEnd() throws IOException, TransformerException {
     Document transformed = transform("/xslt/addJava8Runtime.xsl",
         "<appengine-web-app xmlns=\"http://appengine.google.com/ns/1.0\"><threadsafe>true</threadsafe></appengine-web-app>");
     Element runtime = getRuntimeElement(transformed);
@@ -142,7 +157,8 @@ public class AppEngineXsltTransformTest {
     assertNull(getRuntimeValue(transformed));
   }
 
-  private Document transform(String templateFile, String inputValue) {
+  private Document transform(String templateFile, String inputValue) 
+      throws IOException, TransformerException {
     try {
       URL xslPath = AppEngineXsltTransformTest.class.getResource(templateFile);
       if (xslPath == null) {
@@ -157,7 +173,7 @@ public class AppEngineXsltTransformTest {
       builderFactory.setNamespaceAware(true);
       DocumentBuilder builder = builderFactory.newDocumentBuilder();
       return builder.parse(transformed);
-    } catch (IOException | TransformerException | ParserConfigurationException | SAXException ex) {
+    } catch (ParserConfigurationException | SAXException ex) {
       // these aren't interesting for the test
       throw new RuntimeException(ex);
     }
