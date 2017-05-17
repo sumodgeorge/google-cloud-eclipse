@@ -19,11 +19,10 @@ package com.google.cloud.tools.eclipse.appengine.deploy.ui.flexible;
 import com.google.cloud.tools.eclipse.appengine.deploy.flex.FlexDeployPreferences;
 import com.google.cloud.tools.eclipse.appengine.deploy.ui.AppEngineDeployPreferencesPanel;
 import com.google.cloud.tools.eclipse.appengine.deploy.ui.Messages;
-import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.AppYamlPathValidator;
+import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.AppYamlValidator;
 import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.RelativeFileFieldSetter;
 import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
 import com.google.cloud.tools.eclipse.projectselector.ProjectRepository;
-import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.PojoProperties;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.resources.IProject;
@@ -82,14 +81,10 @@ public class FlexDeployPreferencesPanel extends AppEngineDeployPreferencesPanel 
     ISWTObservableValue fieldValue = WidgetProperties.text(SWT.Modify).observe(appYamlField);
     IObservableValue modelValue = PojoProperties.value("appYamlPath").observe(model);
 
-    if (!requireValues) {
-      bindingContext.bindValue(fieldValue, modelValue);
-    } else {
-      UpdateValueStrategy updateStrategy = new UpdateValueStrategy()
-          .setAfterGetValidator(new AppYamlPathValidator(project.getLocation()));
-      bindingContext.bindValue(fieldValue, modelValue, updateStrategy, updateStrategy);
-      // Force setting the path field even if validation fails.
-      appYamlField.setText((String) modelValue.getValue());
+    bindingContext.bindValue(fieldValue, modelValue);
+    if (requireValues) {
+      bindingContext.addValidationStatusProvider(
+          new AppYamlValidator(project.getLocation(), fieldValue));
     }
   }
 
