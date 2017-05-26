@@ -18,6 +18,7 @@ package com.google.cloud.tools.eclipse.appengine.deploy.ui;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.cloud.tools.eclipse.appengine.deploy.DeployPreferences;
+import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.FixedMultiValidator;
 import com.google.cloud.tools.eclipse.appengine.deploy.ui.internal.ProjectSelectorSelectionChangedListener;
 import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
 import com.google.cloud.tools.eclipse.login.ui.AccountSelector;
@@ -48,13 +49,10 @@ import org.eclipse.core.databinding.ObservablesManager;
 import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.PojoProperties;
 import org.eclipse.core.databinding.conversion.Converter;
-import org.eclipse.core.databinding.observable.Observables;
-import org.eclipse.core.databinding.observable.list.IObservableList;
 import org.eclipse.core.databinding.observable.value.ComputedValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.core.databinding.validation.IValidator;
-import org.eclipse.core.databinding.validation.MultiValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
@@ -112,13 +110,13 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
 
   private final Image refreshIcon = SharedImages.REFRESH_IMAGE_DESCRIPTOR.createImage(getDisplay());
 
-  @VisibleForTesting
-  final DeployPreferences model;
+  protected final IProject project;
+  protected final DeployPreferences model;
   private final ObservablesManager observables = new ObservablesManager();
-  private final DataBindingContext bindingContext = new DataBindingContext();
+  protected final DataBindingContext bindingContext = new DataBindingContext();
 
   private final Runnable layoutChangedHandler;
-  private final boolean requireValues;
+  protected final boolean requireValues;
 
   private final ProjectRepository projectRepository;
   private final FormToolkit formToolkit;
@@ -128,6 +126,7 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
       ProjectRepository projectRepository, DeployPreferences model) {
     super(parent, SWT.NONE);
 
+    this.project = project;
     this.layoutChangedHandler = Preconditions.checkNotNull(layoutChangedHandler);
     this.requireValues = requireValues;
     this.projectRepository = projectRepository;
@@ -231,23 +230,23 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
    * <ul>
    *   <li> Binds {@code master} to the property with the name {@code masterModelPropertyName}
    *       in the {@link #model}.
-   *   <li> Binds {@code dependant} to the property with the name {@code dependantModelPropertyName}
+   *   <li> Binds {@code dependent} to the property with the name {@code dependantModelPropertyName}
    *       in the {#link model}.
-   *   <li> Binds {@code master} and {@code dependant} in a way that {@code dependant} is disabled
+   *   <li> Binds {@code master} and {@code dependent} in a way that {@code dependent} is disabled
    *       and unchecked when {@code master} is unchecked. When {@code master} is checked back,
-   *       {@code dependant} restores its previous check state.
+   *       {@code dependent} restores its previous check state.
    * <ul>
    */
   private void setupMasterDependantDataBinding(Control master, String masterModelPropertyName,
-      Control dependant, String dependantModelPropertyName) {
+      Control dependent, String dependentModelPropertyName) {
 
     ISWTObservableValue masterValue = WidgetProperties.selection().observe(master);
-    final ISWTObservableValue dependantValue = WidgetProperties.selection().observe(dependant);
-    final ISWTObservableValue dependantEnablement = WidgetProperties.enabled().observe(dependant);
+    final ISWTObservableValue dependantValue = WidgetProperties.selection().observe(dependent);
+    final ISWTObservableValue dependantEnablement = WidgetProperties.enabled().observe(dependent);
 
     IObservableValue masterModel = PojoProperties.value(masterModelPropertyName).observe(model);
     IObservableValue dependantModel =
-        PojoProperties.value(dependantModelPropertyName).observe(model);
+        PojoProperties.value(dependentModelPropertyName).observe(model);
 
     bindingContext.bindValue(dependantEnablement, masterValue);
 
@@ -313,7 +312,6 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
   }
 
   private void createCredentialSection(IGoogleLoginService loginService) {
-
     Label accountLabel = new Label(this, SWT.LEAD);
     accountLabel.setText(Messages.getString("deploy.preferences.dialog.label.selectAccount"));
     accountLabel.setToolTipText(Messages.getString("tooltip.account"));
@@ -453,7 +451,8 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
     return bucketComposite;
   }
 
-  private Job latestGcpProjectQueryJob;  // Must be updated/accessed in the UI context.
+  @VisibleForTesting
+  public Job latestGcpProjectQueryJob;  // Must be updated/accessed in the UI context.
 
   private Predicate<Job> isLatestQueryJob = new Predicate<Job>() {
     @Override
@@ -461,11 +460,6 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
       return job == latestGcpProjectQueryJob;
     }
   };
-
-  @VisibleForTesting
-  Job getLatestGcpProjectQueryJob() {
-    return latestGcpProjectQueryJob;
-  }
 
   private void refreshProjectsForSelectedCredential() {
     projectSelector.setProjects(Collections.<GcpProject>emptyList());
@@ -479,7 +473,7 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
     }
   }
 
-  public final class RefreshProjectOnAccountSelection implements Runnable {
+  private final class RefreshProjectOnAccountSelection implements Runnable {
 
     private final Button refreshProjectsButton;
 
@@ -603,19 +597,9 @@ public abstract class AppEngineDeployPreferencesPanel extends DeployPreferencesP
     }
   }
 
-  // BUGFIX: https://bugs.eclipse.org/bugs/show_bug.cgi?id=312785
-  private abstract static class FixedMultiValidator extends MultiValidator {
-    @Override
-    public IObservableList getTargets() {
-      if (isDisposed()) {
-        return Observables.emptyObservableList();
-      }
-      return super.getTargets();
-    }
-  }
-
+  @VisibleForTesting
   @Override
-  DataBindingContext getDataBindingContext() {
+  public DataBindingContext getDataBindingContext() {
     return bindingContext;
   }
 

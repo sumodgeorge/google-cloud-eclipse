@@ -8,8 +8,10 @@ Bundle-Vendor: Google Inc.
 Bundle-Version: 0.1.0.qualifier
 Fragment-Host: com.google.cloud.tools.eclipse.appengine.newproject
 Require-Bundle: com.google.cloud.tools.eclipse.test.dependencies,
- com.google.cloud.tools.eclipse.appengine.flex,
  org.eclipse.equinox.registry
 Import-Package: com.google.cloud.tools.eclipse.test.util,
  com.google.cloud.tools.eclipse.test.util.project,
- org.eclipse.core.resources
+ com.google.cloud.tools.eclipse.test.util.ui,
+ org.eclipse.core.resources,
+ org.eclipse.core.runtime;version="3.5.0",
+ org.eclipse.swtbot.swt.finder.widgets

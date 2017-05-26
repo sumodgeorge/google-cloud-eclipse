@@ -7,6 +7,13 @@
   xmlns:appengine="http://appengine.google.com/ns/1.0"
   xmlns="http://appengine.google.com/ns/1.0">
 
+
+  <xsl:template match="/">
+  <xsl:text>
+</xsl:text>
+    <xsl:apply-templates select="*"/>
+  </xsl:template>
+
   <xsl:template match="node()|@*">
     <xsl:copy>
       <xsl:apply-templates select="node()|@*"/>
@@ -16,9 +23,8 @@
   <!-- if no <runtime> elements found, add one -->
   <xsl:template match="/*[not(//appengine:runtime)]">
     <xsl:copy>
-      <xsl:element name="runtime">java8</xsl:element>
       <xsl:apply-templates select="node()|@*"/>
-    </xsl:copy>
+      <xsl:text>  </xsl:text><xsl:element name="runtime">java8</xsl:element><xsl:text>&#x0A;</xsl:text></xsl:copy>
   </xsl:template>
 
   <!-- rewrite any existing <runtime> elements to java8 -->

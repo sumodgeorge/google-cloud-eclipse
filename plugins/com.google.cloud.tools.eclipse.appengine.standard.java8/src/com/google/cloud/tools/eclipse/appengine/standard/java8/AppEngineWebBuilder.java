@@ -19,6 +19,8 @@ package com.google.cloud.tools.eclipse.appengine.standard.java8;
 import com.google.cloud.tools.appengine.AppEngineDescriptor;
 import com.google.cloud.tools.eclipse.appengine.facets.AppEngineStandardFacet;
 import com.google.cloud.tools.eclipse.appengine.facets.WebProjectUtil;
+import com.google.cloud.tools.eclipse.util.MavenUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -34,10 +36,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jst.common.project.facet.core.JavaFacet;
-import org.eclipse.jst.j2ee.web.project.facet.WebFacetUtils;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject.Action;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
+import org.xml.sax.SAXException;
 
 /**
  * Builder to monitor user changes relating to the {@code <runtime>java8</runtime>} element in
@@ -83,22 +85,25 @@ public class AppEngineWebBuilder extends IncrementalProjectBuilder {
       boolean hasJava8Facet = project.hasProjectFacet(JavaFacet.VERSION_1_8);
       // if not the same, then we update the facet to match the appengine-web.xml
       if (hasJava8Facet != hasJava8Runtime) {
-        Set<Action> updates = new HashSet<Action>();
-        // Can upgrade jst.web to 3.1, but cannot downgrade from 3.1
+        Set<Action> updates = new HashSet<>();
         if (hasJava8Runtime) {
           updates.add(new Action(Action.Type.VERSION_CHANGE, JavaFacet.VERSION_1_8, null));
-          updates.add(new Action(Action.Type.VERSION_CHANGE, WebFacetUtils.WEB_31, null));
-        } else {
+        } else if (!MavenUtils.hasMavenNature(project.getProject())) {
+          // see https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues/1941
+          // still not totally clear why this works for standard projects and not maven
           updates.add(new Action(Action.Type.VERSION_CHANGE, JavaFacet.VERSION_1_7, null));
         }
         logger.fine(getProject() + ": changing facets: " + updates);
         project.modify(updates, monitor);
       }
+    } catch (SAXException ex) {
+      // Parsing failed due to malformed XML; just don't check the value now.
     } catch (CoreException | IOException ex) {
       logger.log(Level.SEVERE, getProject() + ": error updating facets", ex);
     }
   }
 
+  @Override
   protected void clean(IProgressMonitor monitor) throws CoreException {
     // nothing to do
   }

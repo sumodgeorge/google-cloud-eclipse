@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.eclipse.appengine.deploy;
+package com.google.cloud.tools.eclipse.appengine.deploy.ui.internal;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.eclipse.core.databinding.observable.Observables;
+import org.eclipse.core.databinding.observable.list.IObservableList;
+import org.eclipse.core.databinding.validation.MultiValidator;
 
-public class MessagesTest {
+//BUGFIX: https://bugs.eclipse.org/bugs/show_bug.cgi?id=312785
+public abstract class FixedMultiValidator extends MultiValidator {
 
-  @Test
-  public void testCloudSdkNotConfigured() {
-    Assert.assertEquals("Deploy failed.", 
-        Messages.getString("deploy.failed.error.message"));
+  @Override
+  public IObservableList getTargets() {
+    if (isDisposed()) {
+      return Observables.emptyObservableList();
+    }
+    return super.getTargets();
   }
-
 }
