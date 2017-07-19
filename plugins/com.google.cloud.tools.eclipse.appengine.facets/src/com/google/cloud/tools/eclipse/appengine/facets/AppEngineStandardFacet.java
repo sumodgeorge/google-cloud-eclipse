@@ -344,10 +344,6 @@ public class AppEngineStandardFacet {
           }
         } else { // Create a new App Engine runtime
           IRuntime appEngineFacetRuntime = createAppEngineFacetRuntime(progress.newChild(10));
-          if (appEngineFacetRuntime == null) {
-            throw new NullPointerException("Could not locate App Engine facet runtime");
-          }
-
           if (project instanceof IFacetedProject) {
             ((IFacetedProject) project).addTargetedRuntime(appEngineFacetRuntime,
                 progress.newChild(10));
@@ -373,9 +369,11 @@ public class AppEngineStandardFacet {
     IRuntimeType appEngineRuntimeType =
         ServerCore.findRuntimeType(AppEngineStandardFacet.DEFAULT_RUNTIME_ID);
     if (appEngineRuntimeType == null) {
-      logger.warning("RuntimeTypes: " + Joiner.on(",").join(ServerCore.getRuntimeTypes()));
-      throw new NullPointerException(
-          "Could not find " + AppEngineStandardFacet.DEFAULT_RUNTIME_NAME + " runtime type");
+      String availableRuntimteTypes = Joiner.on(",").join(ServerCore.getRuntimeTypes());
+      logger.severe("Cannot create App Engine runtime: runtime type not found: "
+          + DEFAULT_RUNTIME_ID + ".  Available runtime types: " + availableRuntimteTypes);
+      throw new CoreException(StatusUtil.error(AppEngineStandardFacet.class,
+          "Could not find " + AppEngineStandardFacet.DEFAULT_RUNTIME_NAME + " runtime type"));
     }
 
     IRuntimeWorkingCopy appEngineRuntimeWorkingCopy
