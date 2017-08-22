@@ -16,6 +16,7 @@
   <description>Patches bundles for Eclipse Mars</description>
 
   <modules>
-   <module>org.eclipse.core.resources</module>
+    <!-- <module>org.eclipse.core.resources</module> -->
+   <module>org.eclipse.core.jobs</module>
   </modules>
 </project>

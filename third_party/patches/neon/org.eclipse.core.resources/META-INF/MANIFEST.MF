@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: %pluginName
+Bundle-Name: org.eclipse.core.resources patched for bug X
 Bundle-SymbolicName: org.eclipse.core.resources; singleton:=true
 Bundle-Version: 3.11.1.v20161107-2032
 Bundle-Activator: org.eclipse.core.resources.ResourcesPlugin

@@ -28,6 +28,6 @@ Export-Package: org.eclipse.core.internal.dtree;x-internal:=true,
   org.eclipse.core.resources.refresh,
   org.eclipse.core.resources.team,
   org.eclipse.core.resources.variableresolvers
-Bundle-Name: %pluginName
+Bundle-Name: org.eclipse.core.resources patched for bug 
 Bundle-Activator: org.eclipse.core.resources.ResourcesPlugin
 
