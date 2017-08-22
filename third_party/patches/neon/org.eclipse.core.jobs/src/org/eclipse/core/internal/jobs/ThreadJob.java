@@ -288,9 +288,11 @@ class ThreadJob extends Job {
 		} finally {
 			if (interrupted)
 				Thread.currentThread().interrupt();
-			//only update the lock state if we ended up using the thread job that was given to us
-			waitEnd(threadJob, threadJob == result, monitor);
-			if (threadJob == result) {
+			ISchedulingRule resultRule = result.getRule();
+			ISchedulingRule threadJobRule = threadJob.getRule();
+			boolean containsRule = resultRule != null && threadJobRule != null && resultRule.contains(threadJobRule);
+			waitEnd(threadJob, containsRule, monitor);
+			if (containsRule) {
 				if (waiting)
 					manager.implicitJobs.removeWaiting(threadJob);
 			}
