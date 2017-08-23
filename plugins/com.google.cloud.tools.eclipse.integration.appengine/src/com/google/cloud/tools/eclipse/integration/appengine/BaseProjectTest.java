@@ -68,6 +68,7 @@ public class BaseProjectTest {
         SwtBotProjectActions.deleteProject(bot, project.getName());
       } catch (TimeoutException ex) {
         // If this fails it shouldn't fail the test, which has already run
+        new RuntimeException("tearDown() timed out", ex).printStackTrace();
       }
       project = null;
     }
