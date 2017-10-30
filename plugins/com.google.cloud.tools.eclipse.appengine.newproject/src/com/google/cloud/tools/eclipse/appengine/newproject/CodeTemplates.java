@@ -265,6 +265,7 @@ public class CodeTemplates {
     properties.put("projectGroupId", config.getMavenGroupId()); //$NON-NLS-1$
     properties.put("projectArtifactId", config.getMavenArtifactId()); //$NON-NLS-1$
     properties.put("projectVersion", config.getMavenVersion()); //$NON-NLS-1$
+    properties.put("package", config.getPackageName());
 
     createChildFile("pom.xml", Templates.POM_XML_FLEX_JAR_TEMPLATE, //$NON-NLS-1$
         project, properties, monitor);

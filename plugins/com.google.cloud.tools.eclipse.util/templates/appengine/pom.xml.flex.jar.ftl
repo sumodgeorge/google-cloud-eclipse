@@ -56,7 +56,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>${r"${package}"}.HelloAppEngineMain</mainClass>
+              <mainClass><#if package != "">${package}.</#if>HelloAppEngineMain</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -77,9 +77,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <filename>${r"${project.build.finalName}"}.jar</filename>
-        </configuration>
       </plugin>
     </plugins>
 
