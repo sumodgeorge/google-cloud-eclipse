@@ -8,7 +8,7 @@ public class HelloAppEngineMain {
 
   public static void main(String[] args) throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-    server.createContext("/hello", new HelloAppEngineHandler());
+    server.createContext("/", new HelloAppEngineHandler());
     server.start();
   }
 }
