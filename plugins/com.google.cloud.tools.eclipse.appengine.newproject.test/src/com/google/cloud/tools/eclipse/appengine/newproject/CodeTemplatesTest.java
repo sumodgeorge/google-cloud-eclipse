@@ -139,6 +139,41 @@ public class CodeTemplatesTest {
     validatePomXml();
   }
 
+  @Test
+  public void testMaterializeAppEngineFlexJarFiles_mainClassSet()
+      throws CoreException, ParserConfigurationException, SAXException, IOException  {
+    AppEngineProjectConfig config = new AppEngineProjectConfig();
+    config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
+    config.setPackageName("com.example");
+
+    IFile mostImportant = CodeTemplates.materializeAppEngineFlexJarFiles(project, config, monitor);
+    validateMainClassInPomXml("com.example", mostImportant);
+  }
+
+  @Test
+  public void testMaterializeAppEngineFlexJarFiles_defaultPackageMainClassSet()
+      throws CoreException, ParserConfigurationException, SAXException, IOException  {
+    AppEngineProjectConfig config = new AppEngineProjectConfig();
+    config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
+
+    IFile mostImportant = CodeTemplates.materializeAppEngineFlexJarFiles(project, config, monitor);
+    validateMainClassInPomXml(null /* expectedPackage */, mostImportant);
+  }
+
+  private void validateMainClassInPomXml(String expectedPackage, IFile mostImportant)
+      throws ParserConfigurationException, SAXException, IOException, CoreException {
+    String mainClassName = mostImportant.getFullPath().removeFileExtension().lastSegment();
+
+    IFile pomXml = project.getFile("pom.xml");
+    Element root = buildDocument(pomXml).getDocumentElement();
+    Element mainClass = (Element) root.getElementsByTagName("mainClass").item(0);
+    if (expectedPackage == null) {
+      Assert.assertEquals(mainClassName, mainClass.getTextContent());
+    } else {
+      Assert.assertEquals(expectedPackage + "." + mainClassName, mainClass.getTextContent());
+    }
+  }
+
   private void validateNonConfigFiles(IFile mostImportant,
       String webXmlNamespace, String webXmlSchemaUrl, String servletVersion)
       throws ParserConfigurationException, SAXException, IOException, CoreException {
