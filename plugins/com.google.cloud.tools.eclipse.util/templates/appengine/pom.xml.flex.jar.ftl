@@ -48,6 +48,27 @@
           </execution>
         </executions>
       </plugin>
+
+      <!--
+        For packaging a runnable fat JAR with all dependencies. You may want to
+        consider using other methods to package a fat JAR.
+      -->
+      <plugin>
+        <groupId>com.jolira</groupId>
+        <artifactId>onejar-maven-plugin</artifactId>
+        <version>1.4.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>one-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <filename>${r"${project.build.finalName}"}.jar</filename>
+        </configuration>
+      </plugin>
     </plugins>
+
   </build>
 </project>
