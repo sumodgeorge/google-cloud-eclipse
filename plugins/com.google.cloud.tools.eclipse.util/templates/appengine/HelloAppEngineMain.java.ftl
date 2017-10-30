@@ -4,7 +4,7 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class HelloAppEngine {
+public class HelloAppEngineMain {
 
   public static void main(String[] args) throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);

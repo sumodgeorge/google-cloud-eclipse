@@ -159,7 +159,7 @@ public class CodeTemplates {
     Map<String, String> properties = new HashMap<>();
     properties.put("package", Strings.nullToEmpty(packageName)); //$NON-NLS-1$
 
-    IFile hello = createChildFile("HelloAppEngine.java", //$NON-NLS-1$
+    IFile hello = createChildFile("HelloAppEngineMain.java", //$NON-NLS-1$
         Templates.HELLO_APPENGINE_MAIN_TEMPLATE,
         mainPackageFolder, properties, subMonitor.newChild(5));
     createChildFile("HelloAppEngineHandler.java", //$NON-NLS-1$
