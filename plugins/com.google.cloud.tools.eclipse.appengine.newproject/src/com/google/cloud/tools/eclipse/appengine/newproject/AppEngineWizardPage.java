@@ -19,6 +19,7 @@ package com.google.cloud.tools.eclipse.appengine.newproject;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.CloudLibraries;
 import com.google.cloud.tools.eclipse.appengine.libraries.model.Library;
 import com.google.cloud.tools.eclipse.appengine.libraries.ui.LibrarySelectorGroup;
+import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig.Template;
 import com.google.cloud.tools.eclipse.appengine.newproject.maven.MavenCoordinatesInput;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineImages;
 import com.google.cloud.tools.eclipse.util.JavaPackageValidator;
@@ -135,7 +136,7 @@ public abstract class AppEngineWizardPage extends WizardNewProjectCreationPage {
   }
 
   protected AppEngineProjectConfig.Template getTemplate() {
-    return null;
+    return Template.DEFAULT;
   }
 
   // Java package name; Composite is laid out with 2 columns.

@@ -39,7 +39,7 @@ public class AppEngineProjectConfig {
   private List<Library> appEngineLibraries = Collections.emptyList();
   private String serviceName;
   private String runtimeId;
-  private Template template;
+  private Template template = Template.DEFAULT;
 
   private boolean useMaven;
   private String mavenGroupId;

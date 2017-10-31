@@ -105,7 +105,7 @@ public class CodeTemplates {
     return hello;
   }
 
-  public static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
+  private static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 30);
 
@@ -119,7 +119,7 @@ public class CodeTemplates {
     return hello;
   }
 
-  public static IFile materializeFlexSpringBoot(IProject project, AppEngineProjectConfig config,
+  private static IFile materializeFlexSpringBoot(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 10);
 
