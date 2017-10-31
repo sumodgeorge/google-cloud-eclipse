@@ -81,7 +81,8 @@ public abstract class AppEngineWizardPage extends WizardNewProjectCreationPage {
     Composite container = (Composite) getControl();
     setHelp(container);
 
-    createCustomFields(container);
+    Composite customFieldsArea = new Composite(container, SWT.NONE);
+    createCustomFields(customFieldsArea);
 
     mavenCoordinatesUi = createMavenCoordinatesInput(container);
     mavenCoordinatesUi.addChangeListener(new Listener() {
@@ -104,17 +105,18 @@ public abstract class AppEngineWizardPage extends WizardNewProjectCreationPage {
     setErrorMessage(null);
     setMessage(Messages.getString("enter.project.name"));
 
+    GridLayoutFactory.swtDefaults().numColumns(2).generateLayout(customFieldsArea);
     GridLayoutFactory.swtDefaults().generateLayout(container);
     Dialog.applyDialogFont(container);
   }
 
-  private void createCustomFields(Composite container) {
-    Composite composite = new Composite(container, SWT.NONE);
-    createRuntimeField(composite);
-    createPackageField(composite);
-    createServiceField(composite);
-
-    GridLayoutFactory.swtDefaults().numColumns(2).generateLayout(composite);
+  /**
+   * @param container 2-column composite
+   */
+  protected void createCustomFields(Composite container) {
+    createRuntimeField(container);
+    createPackageField(container);
+    createServiceField(container);
   }
 
   protected void revalidate() {

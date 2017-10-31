@@ -40,8 +40,8 @@ import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
 
 public abstract class AppEngineProjectWizard extends Wizard implements INewWizard {
 
-  protected AppEngineWizardPage page = null;
-  protected final AppEngineProjectConfig config = new AppEngineProjectConfig();
+  private AppEngineWizardPage page = null;
+  private final AppEngineProjectConfig config = new AppEngineProjectConfig();
   private IWorkbench workbench;
 
   public AppEngineProjectWizard() {
