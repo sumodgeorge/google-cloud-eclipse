@@ -33,7 +33,7 @@ import org.eclipse.ui.PlatformUI;
 public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
 
   private static final ImmutableMap<Template, String> TEMPLATE_NAMES = ImmutableMap.of(
-      Template.DEFAULT, Messages.getString("FLEX_JAR_SIMPLE_TEMPLATE"), //$NON-NLS-1$
+      Template.DEFAULT, Messages.getString("FLEX_JAR_NO_WEB_FRAMEWORK_TEMPLATE"), //$NON-NLS-1$
       Template.SPRING_BOOT, Messages.getString("FLEX_SPRING_BOOT_TEMPLATE")); //$NON-NLS-1$
 
   private Combo combo;
