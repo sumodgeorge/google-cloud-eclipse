@@ -19,6 +19,7 @@ package com.google.cloud.tools.eclipse.appengine.newproject.flex;
 import com.google.cloud.tools.eclipse.appengine.libraries.repository.ILibraryRepositoryService;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectWizard;
+import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineWizardPage;
 import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineProject;
 import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
@@ -32,27 +33,27 @@ public class AppEngineFlexWarProjectWizard extends AppEngineProjectWizard {
   @Inject
   private ILibraryRepositoryService repositoryService;
 
-  public AppEngineFlexWarProjectWizard() {
+  AppEngineFlexWarProjectWizard() {
     setWindowTitle(Messages.getString("new.app.engine.flex.war.project"));
   }
 
   @Override
-  public AppEngineFlexWizardPage createWizardPage() {
+  protected AppEngineWizardPage createWizardPage() {
     AnalyticsPingManager.getInstance().sendPing(
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD,
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD_TYPE,
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD_TYPE_FLEX, getShell());
 
-    return new AppEngineFlexWizardPage();
+    return new AppEngineFlexWarWizardPage();
   }
 
   @Override
-  public IStatus validateDependencies() {
+  protected IStatus validateDependencies() {
     return Status.OK_STATUS;
   }
 
   @Override
-  public CreateAppEngineProject getAppEngineProjectCreationOperation(
+  protected CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
     return new CreateAppEngineFlexWtpProject(config, uiInfoAdapter, repositoryService);
   }

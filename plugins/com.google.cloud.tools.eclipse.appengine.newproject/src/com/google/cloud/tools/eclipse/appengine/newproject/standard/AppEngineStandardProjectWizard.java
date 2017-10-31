@@ -20,6 +20,7 @@ import com.google.cloud.tools.eclipse.appengine.libraries.ILibraryClasspathConta
 import com.google.cloud.tools.eclipse.appengine.libraries.repository.ILibraryRepositoryService;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectWizard;
+import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineWizardPage;
 import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineProject;
 import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineRuntime;
@@ -42,12 +43,12 @@ public class AppEngineStandardProjectWizard extends AppEngineProjectWizard {
   @Inject
   private ILibraryRepositoryService repositoryService;
 
-  public AppEngineStandardProjectWizard() {
+  AppEngineStandardProjectWizard() {
     setWindowTitle(Messages.getString("new.app.engine.standard.project"));
   }
 
   @Override
-  public AppEngineStandardWizardPage createWizardPage() {
+  protected AppEngineWizardPage createWizardPage() {
     AnalyticsPingManager.getInstance().sendPing(
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD,
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD_TYPE,
@@ -57,7 +58,7 @@ public class AppEngineStandardProjectWizard extends AppEngineProjectWizard {
   }
 
   @Override
-  public IStatus validateDependencies() {
+  protected IStatus validateDependencies() {
     try {
       boolean fork = true;
       boolean cancelable = true;
@@ -78,7 +79,7 @@ public class AppEngineStandardProjectWizard extends AppEngineProjectWizard {
   }
 
   @Override
-  public CreateAppEngineProject getAppEngineProjectCreationOperation(
+  protected CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
     return new CreateAppEngineStandardWtpProject(config, uiInfoAdapter, repositoryService);
   }

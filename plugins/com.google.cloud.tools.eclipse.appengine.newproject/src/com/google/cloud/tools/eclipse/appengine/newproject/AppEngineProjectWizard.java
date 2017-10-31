@@ -48,11 +48,11 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
     setNeedsProgressMonitor(true);
   }
 
-  public abstract AppEngineWizardPage createWizardPage();
+  protected abstract AppEngineWizardPage createWizardPage();
 
-  public abstract IStatus validateDependencies();
+  protected abstract IStatus validateDependencies();
 
-  public abstract CreateAppEngineProject getAppEngineProjectCreationOperation(
+  protected abstract CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter);
 
   @Override

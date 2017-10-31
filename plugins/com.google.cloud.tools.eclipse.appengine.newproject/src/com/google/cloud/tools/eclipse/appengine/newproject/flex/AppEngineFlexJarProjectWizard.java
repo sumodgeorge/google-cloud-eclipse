@@ -32,27 +32,27 @@ public class AppEngineFlexJarProjectWizard extends AppEngineProjectWizard {
   @Inject
   private ILibraryRepositoryService repositoryService;
 
-  public AppEngineFlexJarProjectWizard() {
+  AppEngineFlexJarProjectWizard() {
     setWindowTitle(Messages.getString("new.app.engine.flex.jar.project"));
   }
 
   @Override
-  public AppEngineFlexWizardPage createWizardPage() {
+  protected AppEngineFlexWarWizardPage createWizardPage() {
     AnalyticsPingManager.getInstance().sendPing(
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD,
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD_TYPE,
         AnalyticsEvents.APP_ENGINE_NEW_PROJECT_WIZARD_TYPE_FLEX, getShell());
 
-    return new AppEngineFlexWizardPage();
+    return new AppEngineFlexWarWizardPage();
   }
 
   @Override
-  public IStatus validateDependencies() {
+  protected IStatus validateDependencies() {
     return Status.OK_STATUS;
   }
 
   @Override
-  public CreateAppEngineProject getAppEngineProjectCreationOperation(
+  protected CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
     return new CreateAppEngineFlexJarProject(config, uiInfoAdapter, repositoryService);
   }
