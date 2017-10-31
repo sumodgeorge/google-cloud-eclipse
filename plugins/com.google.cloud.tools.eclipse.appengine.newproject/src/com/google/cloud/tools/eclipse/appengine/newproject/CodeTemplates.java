@@ -63,11 +63,6 @@ public class CodeTemplates {
     return materialize(project, config, false /* isStandardProject */, monitor);
   }
 
-  public static IFile materializeAppEngineFlexJarFiles(IProject project,
-      AppEngineProjectConfig config, IProgressMonitor monitor) throws CoreException {
-    return materializeFlexJar(project, config, monitor);
-  }
-
   /**
    * Creates files for a sample App Engine project in the supplied Eclipse project.
    *
@@ -101,7 +96,7 @@ public class CodeTemplates {
     return hello;
   }
 
-  private static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
+  public static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 30);
 
@@ -115,7 +110,7 @@ public class CodeTemplates {
     return hello;
   }
 
-  private static IFile materializeFlexSpringBoot(IProject project, AppEngineProjectConfig config,
+  public static IFile materializeFlexSpringBoot(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 10);
 

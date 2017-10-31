@@ -132,9 +132,23 @@ public class CodeTemplatesTest {
     config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
     config.setServiceName("database-service");
 
-    IFile mostImportant = CodeTemplates.materializeAppEngineFlexJarFiles(project, config, monitor);
+    IFile mostImportant = CodeTemplates.materializeFlexJar(project, config, monitor);
 
     validateFlexJarNonConfigFiles(mostImportant);
+    validateAppYaml();
+    validatePomXml();
+  }
+
+  @Test
+  public void testMaterializeFlexSpringBoot()
+      throws CoreException, ParserConfigurationException, SAXException, IOException  {
+    AppEngineProjectConfig config = new AppEngineProjectConfig();
+    config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
+    config.setServiceName("database-service");
+
+    IFile mostImportant = CodeTemplates.materializeFlexSpringBoot(project, config, monitor);
+
+    validateFlexSpringBootNonConfigFiles(mostImportant);
     validateAppYaml();
     validatePomXml();
   }
@@ -146,7 +160,7 @@ public class CodeTemplatesTest {
     config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
     config.setPackageName("com.example");
 
-    IFile mostImportant = CodeTemplates.materializeAppEngineFlexJarFiles(project, config, monitor);
+    IFile mostImportant = CodeTemplates.materializeFlexJar(project, config, monitor);
     validateMainClassInPomXml("com.example", mostImportant);
   }
 
@@ -156,7 +170,7 @@ public class CodeTemplatesTest {
     AppEngineProjectConfig config = new AppEngineProjectConfig();
     config.setUseMaven("my.project.group.id", "my-project-artifact-id", "98.76.54");
 
-    IFile mostImportant = CodeTemplates.materializeAppEngineFlexJarFiles(project, config, monitor);
+    IFile mostImportant = CodeTemplates.materializeFlexJar(project, config, monitor);
     validateMainClassInPomXml(null /* expectedPackage */, mostImportant);
   }
 
@@ -214,6 +228,14 @@ public class CodeTemplatesTest {
     Assert.assertTrue(handlerTest.exists());
     IFile mockHttpExchange = project.getFile("src/test/java/MockHttpExchange.java");
     Assert.assertTrue(mockHttpExchange.exists());
+  }
+
+  private void validateFlexSpringBootNonConfigFiles(IFile mostImportant) {
+    IFile main = project.getFile("src/main/java/HelloAppEngineSpringBoot.java");
+    Assert.assertTrue(main.exists());
+    Assert.assertEquals(main, mostImportant);
+    IFile handler = project.getFile("src/test/java/HelloAppEngineSpringBootIntegrationTest.java");
+    Assert.assertTrue(handler.exists());
   }
 
   private void validateAppEngineWebXml(AppEngineRuntime runtime)
