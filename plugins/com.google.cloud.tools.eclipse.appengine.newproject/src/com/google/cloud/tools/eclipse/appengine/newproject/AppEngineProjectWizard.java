@@ -89,8 +89,7 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
 
     // todo set up
     IAdaptable uiInfoAdapter = WorkspaceUndoUtil.getUIInfoAdapter(getShell());
-    CreateAppEngineProject runnable =
-        getAppEngineProjectCreationOperation(config, uiInfoAdapter);
+    CreateAppEngineProject runnable = getAppEngineProjectCreationOperation(config, uiInfoAdapter);
 
     try {
       boolean fork = true;
@@ -114,6 +113,7 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
     config.setServiceName(page.getServiceName());
     config.setPackageName(page.getPackageName());
     config.setRuntimeId(page.getRuntimeId());
+    config.setTemplate(page.getTemplate());
     config.setProject(page.getProjectHandle());
     if (!page.useDefaults()) {
       config.setEclipseProjectLocationUri(page.getLocationURI());

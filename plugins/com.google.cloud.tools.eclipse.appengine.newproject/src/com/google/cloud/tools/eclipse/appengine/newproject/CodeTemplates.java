@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.eclipse.appengine.newproject;
 
+import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig.Template;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineRuntime;
 import com.google.cloud.tools.eclipse.util.Templates;
 import com.google.cloud.tools.eclipse.util.io.ResourceUtils;
@@ -61,6 +62,14 @@ public class CodeTemplates {
   public static IFile materializeAppEngineFlexFiles(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     return materialize(project, config, false /* isStandardProject */, monitor);
+  }
+
+  public static IFile materializeAppEngineFlexJarFiles(IProject project,
+      AppEngineProjectConfig config, IProgressMonitor monitor) throws CoreException {
+    if (Template.SPRING_BOOT.equals(config.getTemplate())) {
+      return materializeFlexSpringBoot(project, config, monitor);
+    }
+    return materializeFlexJar(project, config, monitor);
   }
 
   /**

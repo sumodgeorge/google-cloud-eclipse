@@ -76,7 +76,7 @@ public class AppEngineStandardWizardPage extends AppEngineWizardPage {
   }
 
   @Override
-  public String getRuntimeId() {
+  protected String getRuntimeId() {
     AppEngineRuntime selected = DEFAULT_RUNTIME;
     if (runtimeField != null && !runtimeField.getSelection().isEmpty()) {
       Preconditions.checkState(runtimeField.getSelection() instanceof IStructuredSelection,

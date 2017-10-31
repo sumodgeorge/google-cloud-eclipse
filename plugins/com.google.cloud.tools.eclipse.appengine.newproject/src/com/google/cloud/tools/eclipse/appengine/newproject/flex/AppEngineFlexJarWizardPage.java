@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.eclipse.appengine.newproject.flex;
 
+import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig.Template;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineWizardPage;
 import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.appengine.newproject.maven.MavenCoordinatesInput;
@@ -31,11 +32,9 @@ import org.eclipse.ui.PlatformUI;
 
 public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
 
-  static enum SampleTemplate { SIMPLE, SPRING_BOOT };
-
-  private static final ImmutableMap<SampleTemplate, String> TEMPLATE_NAMES = ImmutableMap.of(
-      SampleTemplate.SIMPLE, Messages.getString("FLEX_JAR_SIMPLE_TEMPLATE"), //$NON-NLS-1$
-      SampleTemplate.SPRING_BOOT, Messages.getString("FLEX_SPRING_BOOT_TEMPLATE")); //$NON-NLS-1$
+  private static final ImmutableMap<Template, String> TEMPLATE_NAMES = ImmutableMap.of(
+      Template.DEFAULT, Messages.getString("FLEX_JAR_SIMPLE_TEMPLATE"), //$NON-NLS-1$
+      Template.SPRING_BOOT, Messages.getString("FLEX_SPRING_BOOT_TEMPLATE")); //$NON-NLS-1$
 
   private Combo combo;
 
@@ -64,14 +63,15 @@ public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
     label.setText(Messages.getString("FLEX_JAR_SAMPLE_TEMPLATE")); //$NON-NLS-1$
     combo = new Combo(container, SWT.READ_ONLY);
     combo.setItems(new String[] {
-        TEMPLATE_NAMES.get(SampleTemplate.SIMPLE), TEMPLATE_NAMES.get(SampleTemplate.SPRING_BOOT)
+        TEMPLATE_NAMES.get(Template.DEFAULT), TEMPLATE_NAMES.get(Template.SPRING_BOOT)
     });
     combo.select(0);
   }
 
-  SampleTemplate getSelectedTemplate() {
+  @Override
+  protected Template getTemplate() {
     Preconditions.checkState(combo.getSelectionIndex() != -1);;
-    for (Entry<SampleTemplate, String> entry : TEMPLATE_NAMES.entrySet()) {
+    for (Entry<Template, String> entry : TEMPLATE_NAMES.entrySet()) {
       if (entry.getValue().equals(combo.getText())) {
         return entry.getKey();
       }

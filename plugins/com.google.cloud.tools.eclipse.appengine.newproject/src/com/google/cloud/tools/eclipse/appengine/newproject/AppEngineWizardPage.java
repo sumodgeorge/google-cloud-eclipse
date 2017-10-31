@@ -111,7 +111,7 @@ public abstract class AppEngineWizardPage extends WizardNewProjectCreationPage {
   }
 
   /**
-   * @param container 2-column composite
+   * Creates a custom-field section. Composite is laid out with 2 columns.
    */
   protected void createCustomFields(Composite container) {
     createRuntimeField(container);
@@ -130,7 +130,11 @@ public abstract class AppEngineWizardPage extends WizardNewProjectCreationPage {
     // default: do nothing; used by subclasses
   }
 
-  public String getRuntimeId() {
+  protected String getRuntimeId() {
+    return null;
+  }
+
+  protected AppEngineProjectConfig.Template getTemplate() {
     return null;
   }
 
