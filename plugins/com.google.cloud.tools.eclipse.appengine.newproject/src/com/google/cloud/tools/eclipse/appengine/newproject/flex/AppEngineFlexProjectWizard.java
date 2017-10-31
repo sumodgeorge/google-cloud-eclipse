@@ -54,7 +54,7 @@ public class AppEngineFlexProjectWizard extends AppEngineProjectWizard {
   @Override
   public CreateAppEngineWtpProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
-    return new CreateAppEngineFlexJarProject(config, uiInfoAdapter, repositoryService);
+    return new CreateAppEngineFlexWtpProject(config, uiInfoAdapter, repositoryService);
   }
 
   @Override
