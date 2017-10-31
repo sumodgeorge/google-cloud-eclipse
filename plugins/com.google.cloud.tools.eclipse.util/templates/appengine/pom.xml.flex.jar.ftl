@@ -49,19 +49,6 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass><#if package != "">${package}.</#if>HelloAppEngineMain</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-
       <!--
         For packaging a runnable fat JAR with all dependencies. You may want to
         consider using other methods to package a fat JAR.
@@ -72,6 +59,9 @@
         <version>1.4.4</version>
         <executions>
           <execution>
+            <configuration>
+              <mainClass><#if package != "">${package}.</#if>HelloAppEngineMain</mainClass>
+            </configuration>
             <goals>
               <goal>one-jar</goal>
             </goals>
