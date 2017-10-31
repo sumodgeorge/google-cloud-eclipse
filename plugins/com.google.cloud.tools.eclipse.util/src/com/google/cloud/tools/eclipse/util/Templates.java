@@ -52,9 +52,15 @@ public class Templates {
       "HelloAppEngineHandlerTest.java.ftl";
   public static final String MOCKHTTPEXCHANGE_TEMPLATE = "MockHttpExchange.java.ftl";
 
+  public static final String HELLO_APPENGINE_SPRING_BOOT_TEMPLATE =
+      "HelloAppEngineSpringBoot.java.ftl";
+  public static final String HELLO_APPENGINE_SPRING_BOOT_INTEGRATION_TEST_TEMPLATE =
+      "HelloAppEngineSpringBootIntegrationTest.java.ftl";
+
   public static final String POM_XML_STANDARD_TEMPLATE = "pom.xml.standard.ftl";
   public static final String POM_XML_FLEX_TEMPLATE = "pom.xml.flex.ftl";
   public static final String POM_XML_FLEX_JAR_TEMPLATE = "pom.xml.flex.jar.ftl";
+  public static final String POM_XML_FLEX_SPRING_BOOT_TEMPLATE = "pom.xml.flex.spring.boot.ftl";
 
   private static Configuration configuration;
 
