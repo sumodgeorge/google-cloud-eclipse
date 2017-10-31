@@ -63,11 +63,6 @@ public class CodeTemplates {
     return materialize(project, config, false /* isStandardProject */, monitor);
   }
 
-  public static IFile materializeAppEngineFlexJarFiles(IProject project,
-      AppEngineProjectConfig config, IProgressMonitor monitor) throws CoreException {
-    return materializeFlexJar(project, config, monitor);
-  }
-
   /**
    * Creates files for a sample App Engine project in the supplied Eclipse project.
    *
@@ -101,7 +96,7 @@ public class CodeTemplates {
     return hello;
   }
 
-  private static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
+  public static IFile materializeFlexJar(IProject project, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
     SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 30);
 
@@ -111,6 +106,20 @@ public class CodeTemplates {
     createAppEngineWebXmlOrAppYaml(project, config, isStandardProject, subMonitor.newChild(5));
 
     createFlexJarPomXml(project, config, subMonitor.newChild(5));
+
+    return hello;
+  }
+
+  public static IFile materializeFlexSpringBoot(IProject project, AppEngineProjectConfig config,
+      IProgressMonitor monitor) throws CoreException {
+    SubMonitor subMonitor = SubMonitor.convert(monitor, "Generating code", 10);
+
+    IFile hello = createFlexSpringBootJavaSourceFiles(project, config, subMonitor.newChild(20));
+
+    boolean isStandardProject = false;
+    createAppEngineWebXmlOrAppYaml(project, config, isStandardProject, subMonitor.newChild(5));
+
+    createFlexSpringBootPomXml(project, config, subMonitor.newChild(5));
 
     return hello;
   }
@@ -171,6 +180,29 @@ public class CodeTemplates {
         testPackageFolder, properties, subMonitor.newChild(5));
     createChildFile("MockHttpExchange.java", //$NON-NLS-1$
         Templates.MOCKHTTPEXCHANGE_TEMPLATE,
+        testPackageFolder, properties, subMonitor.newChild(5));
+
+    return hello;
+  }
+
+  private static IFile createFlexSpringBootJavaSourceFiles(IProject project,
+      AppEngineProjectConfig config, IProgressMonitor monitor) throws CoreException {
+    SubMonitor subMonitor = SubMonitor.convert(monitor, 10);
+
+    String packageName = config.getPackageName();
+    String packagePath = packageName.replace('.', '/');
+    IFolder mainPackageFolder = project.getFolder("src/main/java/" + packagePath); //$NON-NLS-1$
+    IFolder testPackageFolder = project.getFolder("src/test/java/" + packagePath); //$NON-NLS-1$
+
+    Map<String, String> properties = new HashMap<>();
+    properties.put("package", Strings.nullToEmpty(packageName)); //$NON-NLS-1$
+
+    IFile hello = createChildFile("HelloAppEngineSpringBoot.java", //$NON-NLS-1$
+        Templates.HELLO_APPENGINE_SPRING_BOOT_TEMPLATE,
+        mainPackageFolder, properties, subMonitor.newChild(5));
+
+    createChildFile("HelloAppEngineSpringBootIntegrationTest.java", //$NON-NLS-1$
+        Templates.HELLO_APPENGINE_SPRING_BOOT_INTEGRATION_TEST_TEMPLATE,
         testPackageFolder, properties, subMonitor.newChild(5));
 
     return hello;
@@ -268,6 +300,17 @@ public class CodeTemplates {
     properties.put("package", config.getPackageName());
 
     createChildFile("pom.xml", Templates.POM_XML_FLEX_JAR_TEMPLATE, //$NON-NLS-1$
+        project, properties, monitor);
+  }
+
+  private static void createFlexSpringBootPomXml(IProject project, AppEngineProjectConfig config,
+      IProgressMonitor monitor) throws CoreException {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("projectGroupId", config.getMavenGroupId()); //$NON-NLS-1$
+    properties.put("projectArtifactId", config.getMavenArtifactId()); //$NON-NLS-1$
+    properties.put("projectVersion", config.getMavenVersion()); //$NON-NLS-1$
+
+    createChildFile("pom.xml", Templates.POM_XML_FLEX_SPRING_BOOT_TEMPLATE, //$NON-NLS-1$
         project, properties, monitor);
   }
 

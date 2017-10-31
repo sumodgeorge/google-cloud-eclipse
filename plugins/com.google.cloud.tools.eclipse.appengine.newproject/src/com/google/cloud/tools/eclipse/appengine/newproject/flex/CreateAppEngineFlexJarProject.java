@@ -55,8 +55,7 @@ public class CreateAppEngineFlexJarProject extends CreateAppEngineProject {
   @Override
   public IFile createAndConfigureProjectContent(IProject newProject, AppEngineProjectConfig config,
       IProgressMonitor monitor) throws CoreException {
-    IFile mostImportantFile =  CodeTemplates.materializeAppEngineFlexJarFiles(newProject, config,
-        monitor);
+    IFile mostImportantFile =  CodeTemplates.materializeFlexJar(newProject, config, monitor);
     return mostImportantFile;
   }
 }
