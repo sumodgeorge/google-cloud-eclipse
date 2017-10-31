@@ -28,12 +28,12 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-public class AppEngineFlexProjectWizard extends AppEngineProjectWizard {
+public class AppEngineFlexWarProjectWizard extends AppEngineProjectWizard {
   @Inject
   private ILibraryRepositoryService repositoryService;
 
-  public AppEngineFlexProjectWizard() {
-    setWindowTitle(Messages.getString("new.app.engine.flex.project"));
+  public AppEngineFlexWarProjectWizard() {
+    setWindowTitle(Messages.getString("new.app.engine.flex.war.project"));
   }
 
   @Override

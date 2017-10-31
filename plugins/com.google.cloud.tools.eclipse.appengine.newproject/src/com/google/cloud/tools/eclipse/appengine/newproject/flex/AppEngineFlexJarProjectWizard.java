@@ -33,7 +33,7 @@ public class AppEngineFlexJarProjectWizard extends AppEngineProjectWizard {
   private ILibraryRepositoryService repositoryService;
 
   public AppEngineFlexJarProjectWizard() {
-    setWindowTitle(Messages.getString("new.app.engine.flex.project"));
+    setWindowTitle(Messages.getString("new.app.engine.flex.jar.project"));
   }
 
   @Override
