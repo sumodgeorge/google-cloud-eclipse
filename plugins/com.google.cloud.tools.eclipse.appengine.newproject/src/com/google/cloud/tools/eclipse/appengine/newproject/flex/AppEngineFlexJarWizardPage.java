@@ -52,7 +52,9 @@ public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
 
   @Override
   protected MavenCoordinatesInput createMavenCoordinatesInput(Composite container) {
-    return new MavenCoordinatesUi(container, SWT.NONE);
+    MavenCoordinatesUi ui = new MavenCoordinatesUi(container, SWT.NONE);
+    ui.setText(Messages.getString("MAVEN_PROJECT_COORDINATES"));
+    return ui;
   }
 
   @Override
