@@ -20,7 +20,7 @@ import com.google.cloud.tools.eclipse.appengine.libraries.ILibraryClasspathConta
 import com.google.cloud.tools.eclipse.appengine.libraries.repository.ILibraryRepositoryService;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectWizard;
-import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineWtpProject;
+import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineProject;
 import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.appengine.ui.AppEngineRuntime;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
@@ -78,7 +78,7 @@ public class AppEngineStandardProjectWizard extends AppEngineProjectWizard {
   }
 
   @Override
-  public CreateAppEngineWtpProject getAppEngineProjectCreationOperation(
+  public CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
     return new CreateAppEngineStandardWtpProject(config, uiInfoAdapter, repositoryService);
   }

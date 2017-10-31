@@ -19,7 +19,7 @@ package com.google.cloud.tools.eclipse.appengine.newproject.flex;
 import com.google.cloud.tools.eclipse.appengine.libraries.repository.ILibraryRepositoryService;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectConfig;
 import com.google.cloud.tools.eclipse.appengine.newproject.AppEngineProjectWizard;
-import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineWtpProject;
+import com.google.cloud.tools.eclipse.appengine.newproject.CreateAppEngineProject;
 import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsPingManager;
@@ -52,7 +52,7 @@ public class AppEngineFlexWarProjectWizard extends AppEngineProjectWizard {
   }
 
   @Override
-  public CreateAppEngineWtpProject getAppEngineProjectCreationOperation(
+  public CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter) {
     return new CreateAppEngineFlexWtpProject(config, uiInfoAdapter, repositoryService);
   }

@@ -52,7 +52,7 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
 
   public abstract IStatus validateDependencies();
 
-  public abstract CreateAppEngineWtpProject getAppEngineProjectCreationOperation(
+  public abstract CreateAppEngineProject getAppEngineProjectCreationOperation(
       AppEngineProjectConfig config, IAdaptable uiInfoAdapter);
 
   @Override
@@ -89,7 +89,7 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
 
     // todo set up
     IAdaptable uiInfoAdapter = WorkspaceUndoUtil.getUIInfoAdapter(getShell());
-    CreateAppEngineWtpProject runnable =
+    CreateAppEngineProject runnable =
         getAppEngineProjectCreationOperation(config, uiInfoAdapter);
 
     try {
