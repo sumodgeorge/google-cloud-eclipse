@@ -22,8 +22,6 @@ import com.google.cloud.tools.eclipse.appengine.newproject.Messages;
 import com.google.cloud.tools.eclipse.appengine.newproject.maven.MavenCoordinatesInput;
 import com.google.cloud.tools.eclipse.appengine.newproject.maven.MavenCoordinatesUi;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import java.util.Map.Entry;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -31,10 +29,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.PlatformUI;
 
 public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
-
-  private static final ImmutableMap<Template, String> TEMPLATE_NAMES = ImmutableMap.of(
-      Template.DEFAULT, Messages.getString("FLEX_JAR_NO_WEB_FRAMEWORK_TEMPLATE"), //$NON-NLS-1$
-      Template.SPRING_BOOT, Messages.getString("FLEX_SPRING_BOOT_TEMPLATE")); //$NON-NLS-1$
 
   private Combo combo;
 
@@ -64,20 +58,16 @@ public class AppEngineFlexJarWizardPage extends AppEngineWizardPage {
     Label label = new Label(container, SWT.LEAD);
     label.setText(Messages.getString("FLEX_JAR_SAMPLE_TEMPLATE")); //$NON-NLS-1$
     combo = new Combo(container, SWT.READ_ONLY);
-    combo.setItems(new String[] {
-        TEMPLATE_NAMES.get(Template.DEFAULT), TEMPLATE_NAMES.get(Template.SPRING_BOOT)
-    });
+    combo.add(Messages.getString("FLEX_JAR_NO_WEB_FRAMEWORK_TEMPLATE"));
+    combo.setData(Messages.getString("FLEX_JAR_NO_WEB_FRAMEWORK_TEMPLATE"), Template.DEFAULT);
+    combo.add(Messages.getString("FLEX_SPRING_BOOT_TEMPLATE"));
+    combo.setData(Messages.getString("FLEX_SPRING_BOOT_TEMPLATE"), Template.SPRING_BOOT);
     combo.select(0);
   }
 
   @Override
   protected Template getTemplate() {
-    Preconditions.checkState(combo.getSelectionIndex() != -1);;
-    for (Entry<Template, String> entry : TEMPLATE_NAMES.entrySet()) {
-      if (entry.getValue().equals(combo.getText())) {
-        return entry.getKey();
-      }
-    }
-    throw new RuntimeException("BUG: value selected has never been added");
+    Preconditions.checkState(combo.getSelectionIndex() != -1);
+    return (Template) combo.getData(combo.getText());
   }
 }
