@@ -15,6 +15,10 @@ location "http://download.eclipse.org/cbi/updates/license" {
     org.eclipse.license.feature.group
 }
 
+location "http://download.eclipse.org/linuxtools/update-docker-3.1.0/" {
+	  org.eclipse.linuxtools.docker.feature.feature.group
+}
+
 // 201706281000 = Oxygen.0
 location "http://download.eclipse.org/releases/oxygen/201706281000/" {
 	org.eclipse.sdk.feature.group
