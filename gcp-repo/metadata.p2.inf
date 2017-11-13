@@ -75,7 +75,6 @@ units.2.provides.1.namespace=org.eclipse.equinox.p2.iu
 units.2.provides.1.name=org.dadacoalition.yedit.category.definition
 units.2.provides.1.version=1.0.0
 
-
 # Define the Dockerfile Editor category IU
 units.3.id=eu.openanalytics.editor.docker.category
 units.3.version=$version$
