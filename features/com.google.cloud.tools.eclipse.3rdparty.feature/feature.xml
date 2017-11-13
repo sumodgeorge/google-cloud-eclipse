@@ -87,23 +87,8 @@
          version="1.17.0"
          unpack="false"/>
 
-<!--
    <plugin
-         id="org.eclipse.linuxtools.docker.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.linuxtools.docker.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/> -->
-
-   <plugin
-         id="org.eclipse.linuxtools.docker.editor"
+         id="eu.openanalytics.editor.docker"
          download-size="0"
          install-size="0"
          version="1.0.0"
