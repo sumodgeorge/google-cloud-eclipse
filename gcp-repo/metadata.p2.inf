@@ -22,7 +22,7 @@ requires.2.greedy=true
 
 requires.3.namespace=org.eclipse.equinox.p2.iu
 requires.3.name=eu.openanalytics.editor.docker.category.definition
-requires.3.range=[1.0.0.201506222127,1.0.0.201506222127]
+requires.3.range=[1.0.0,1.0.0]
 requires.3.greedy=true
 
 # Define the 'Google Cloud Tools for Eclipse' category IU
@@ -96,5 +96,5 @@ units.3.requires.1.name=eu.openanalytics.editor.docker.feature.group
 units.3.requires.1.greedy=true
 units.3.provides.1.namespace=org.eclipse.equinox.p2.iu
 units.3.provides.1.name=eu.openanalytics.editor.docker.category.definition
-units.3.provides.1.version=1.0.0.201506222127
+units.3.provides.1.version=1.0.0
 
