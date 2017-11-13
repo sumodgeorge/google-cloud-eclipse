@@ -15,8 +15,8 @@ location "http://download.eclipse.org/cbi/updates/license" {
     org.eclipse.license.feature.group
 }
 
-location "http://download.eclipse.org/linuxtools/update-docker-3.1.0/" {
-	  org.eclipse.linuxtools.docker.feature.feature.group
+location "http://docker-editor.openanalytics.eu/update" {
+	  eu.openanalytics.editor.docker.feature.group
 }
 
 location "http://download.eclipse.org/releases/neon" {
