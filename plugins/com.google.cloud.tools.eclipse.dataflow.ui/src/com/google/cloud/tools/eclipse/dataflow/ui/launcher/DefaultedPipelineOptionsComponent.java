@@ -43,7 +43,8 @@ import org.eclipse.swt.widgets.Group;
 public class DefaultedPipelineOptionsComponent {
   private Group defaultsGroup;
 
-  private Button loadDefaultsButton;
+  @VisibleForTesting
+  Button loadDefaultsButton;
 
   private DataflowPreferences preferences;
   private Map<String, String> customValues;

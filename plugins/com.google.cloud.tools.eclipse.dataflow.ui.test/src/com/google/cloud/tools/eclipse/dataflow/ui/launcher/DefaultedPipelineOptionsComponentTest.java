@@ -30,6 +30,7 @@ import com.google.cloud.tools.eclipse.test.util.ui.ShellTestResource;
 import com.google.common.base.Strings;
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.swt.SWT;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -199,13 +200,16 @@ public class DefaultedPipelineOptionsComponentTest {
 
     DefaultedPipelineOptionsComponent component = new DefaultedPipelineOptionsComponent(
         shellCreator.getShell(), null, messageTarget, preferences, defaultOptions);
-
     component.setCustomValues(customValues);
-    component.loadPreferences();
+
+    // Simulate a click of the provided button; should be equivalent to loadPreferences()
+    component.loadDefaultsButton.notifyListeners(SWT.Selection, null);
+
     Map<String, String> values = component.getValues();
     assertEquals("pref-email", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
     assertEquals("pref-project", values.get(DataflowPreferences.PROJECT_PROPERTY));
     assertEquals("gs://pref-staging", values.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
     assertEquals("gs://pref-staging", values.get(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY));
   }
+
 }
