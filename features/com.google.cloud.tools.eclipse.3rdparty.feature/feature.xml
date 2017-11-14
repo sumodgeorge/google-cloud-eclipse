@@ -24,6 +24,12 @@
          name="YEdit"
          optional="true"/>
 
+   <includes
+         id="eu.openanalytics.editor.docker"
+         version="0.0.0"
+         name="Docker Editor"
+         optional="true"/>
+
    <plugin
          id="com.google.cloud.tools.appengine"
          download-size="0"
@@ -86,14 +92,7 @@
          install-size="0"
          version="1.17.0"
          unpack="false"/>
-
-   <plugin
-         id="eu.openanalytics.editor.docker"
-         download-size="0"
-         install-size="0"
-         version="1.0.0.201506222127"
-         unpack="false"/>
-
+         
    <plugin
          id="org.glassfish.javax.json"
          download-size="0"
