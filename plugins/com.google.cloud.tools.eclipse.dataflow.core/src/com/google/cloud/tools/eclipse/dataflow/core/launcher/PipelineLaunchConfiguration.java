@@ -51,8 +51,6 @@ public class PipelineLaunchConfiguration {
 
   private Optional<String> eclipseProjectName;
 
-  private boolean useDefaultLaunchOptions;
-
   private PipelineRunner runner;
   private Map<String, String> argumentValues;
   private Optional<String> userOptionsName;
@@ -84,8 +82,6 @@ public class PipelineLaunchConfiguration {
     this.runner = runner;
     this.argumentValues = Collections.<String, String>emptyMap();
 
-    this.useDefaultLaunchOptions = true;
-
     this.userOptionsName = Optional.absent();
     this.eclipseProjectName = Optional.absent();
   }
@@ -114,14 +110,6 @@ public class PipelineLaunchConfiguration {
     this.argumentValues = allRequiredArgs;
   }
 
-  public boolean isUseDefaultLaunchOptions() {
-    return useDefaultLaunchOptions;
-  }
-
-  public void setUseDefaultLaunchOptions(boolean useDefaultLaunchOptions) {
-    this.useDefaultLaunchOptions = useDefaultLaunchOptions;
-  }
-
   public String getEclipseProjectName() {
     return eclipseProjectName.orNull();
   }
@@ -136,10 +124,6 @@ public class PipelineLaunchConfiguration {
       throws CoreException {
     setRunner(PipelineRunner.fromRunnerName(configuration.getAttribute(
         PipelineConfigurationAttr.RUNNER_ARGUMENT.toString(), getRunner().getRunnerName())));
-
-    setUseDefaultLaunchOptions(configuration.getAttribute(
-        PipelineConfigurationAttr.USE_DEFAULT_LAUNCH_OPTIONS.toString(),
-        isUseDefaultLaunchOptions()));
 
     setArgumentValues(configuration.getAttribute(
         PipelineConfigurationAttr.ALL_ARGUMENT_VALUES.toString(), getArgumentValues()));
@@ -157,8 +141,6 @@ public class PipelineLaunchConfiguration {
   public void toLaunchConfiguration(ILaunchConfigurationWorkingCopy configuration) {
     configuration.setAttribute(
         PipelineConfigurationAttr.RUNNER_ARGUMENT.toString(), runner.getRunnerName());
-    configuration.setAttribute(
-        PipelineConfigurationAttr.USE_DEFAULT_LAUNCH_OPTIONS.toString(), useDefaultLaunchOptions);
     configuration.setAttribute(
         PipelineConfigurationAttr.ALL_ARGUMENT_VALUES.toString(), argumentValues);
     configuration.setAttribute(
@@ -284,12 +266,7 @@ public class PipelineLaunchConfiguration {
   }
 
   private boolean isPropertySpecified(String propertyName, DataflowPreferences preferences) {
-    if (isUseDefaultLaunchOptions()
-        && DataflowPreferences.SUPPORTED_DEFAULT_PROPERTIES.contains(propertyName)) {
-      return !Strings.isNullOrEmpty(preferences.asDefaultPropertyMap().get(propertyName));
-    } else {
-      return !Strings.isNullOrEmpty(argumentValues.get(propertyName));
-    }
+    return !Strings.isNullOrEmpty(argumentValues.get(propertyName));
   }
 
   @Override

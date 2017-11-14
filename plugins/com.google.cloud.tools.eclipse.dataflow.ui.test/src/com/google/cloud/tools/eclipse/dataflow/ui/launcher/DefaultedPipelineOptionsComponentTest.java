@@ -17,7 +17,6 @@
 package com.google.cloud.tools.eclipse.dataflow.ui.launcher;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -115,11 +114,10 @@ public class DefaultedPipelineOptionsComponentTest {
   }
 
   @Test
-  public void testDefaults_nulls() {
+  public void testPrefs_nulls() {
     DefaultedPipelineOptionsComponent component = new DefaultedPipelineOptionsComponent(
         shellCreator.getShell(), null, messageTarget, preferences, defaultOptions);
 
-    assertTrue(component.isUseDefaultOptions());
     Map<String, String> values = component.getValues();
     // all empty/null settings should be turned to empty strings
     assertEquals("", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
@@ -129,7 +127,7 @@ public class DefaultedPipelineOptionsComponentTest {
   }
 
   @Test
-  public void testDefaults_values() {
+  public void testPrefs_values() {
     doReturn("pref-email").when(preferences).getDefaultAccountEmail();
     doReturn("pref-project").when(preferences).getDefaultProject();
     doReturn("gs://pref-staging").when(preferences).getDefaultStagingLocation();
@@ -138,7 +136,6 @@ public class DefaultedPipelineOptionsComponentTest {
     DefaultedPipelineOptionsComponent component = new DefaultedPipelineOptionsComponent(
         shellCreator.getShell(), null, messageTarget, preferences, defaultOptions);
 
-    assertTrue(component.isUseDefaultOptions());
     Map<String, String> values = component.getValues();
     assertEquals("pref-email", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
     assertEquals("pref-project", values.get(DataflowPreferences.PROJECT_PROPERTY));
@@ -156,7 +153,6 @@ public class DefaultedPipelineOptionsComponentTest {
     DefaultedPipelineOptionsComponent component = new DefaultedPipelineOptionsComponent(
         shellCreator.getShell(), null, messageTarget, preferences, defaultOptions);
     component.setCustomValues(new HashMap<String, String>());
-    component.setUseDefaultValues(false);
 
     // the empty/null customValues should override the preferences
     Map<String, String> values = component.getValues();
@@ -180,7 +176,6 @@ public class DefaultedPipelineOptionsComponentTest {
     customValues.put(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY, "newTempLocation");
 
     component.setCustomValues(customValues);
-    component.setUseDefaultValues(false);
 
     Map<String, String> values = component.getValues();
     assertEquals("newEmail", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
@@ -190,7 +185,7 @@ public class DefaultedPipelineOptionsComponentTest {
   }
 
   @Test
-  public void testToggleDefaults() {
+  public void testLoadDefaults() {
     doReturn("pref-email").when(preferences).getDefaultAccountEmail();
     doReturn("pref-project").when(preferences).getDefaultProject();
     doReturn("gs://pref-staging").when(preferences).getDefaultStagingLocation();
@@ -205,37 +200,12 @@ public class DefaultedPipelineOptionsComponentTest {
     DefaultedPipelineOptionsComponent component = new DefaultedPipelineOptionsComponent(
         shellCreator.getShell(), null, messageTarget, preferences, defaultOptions);
 
-    assertTrue(component.isUseDefaultOptions());
     component.setCustomValues(customValues);
-    // preferences should be returned, despite customValues being set
+    component.loadPreferences();
     Map<String, String> values = component.getValues();
     assertEquals("pref-email", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
     assertEquals("pref-project", values.get(DataflowPreferences.PROJECT_PROPERTY));
     assertEquals("gs://pref-staging", values.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
     assertEquals("gs://pref-staging", values.get(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY));
-
-    // setting useDefaultValues=false should store current values and restore any custom values
-    component.setUseDefaultValues(false);
-    values = component.getValues();
-    assertEquals("newEmail", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
-    assertEquals("newProject", values.get(DataflowPreferences.PROJECT_PROPERTY));
-    assertEquals("newStagingLocation", values.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
-    assertEquals("newStagingLocation", values.get(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY));
-
-    // setting useDefaultValues=true should restore the preferences values
-    component.setUseDefaultValues(true);
-    values = component.getValues();
-    assertEquals("pref-email", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
-    assertEquals("pref-project", values.get(DataflowPreferences.PROJECT_PROPERTY));
-    assertEquals("gs://pref-staging", values.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
-    assertEquals("gs://pref-staging", values.get(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY));
-
-    // setting useDefaultValues=false should store current values and restore any custom values
-    component.setUseDefaultValues(false);
-    values = component.getValues();
-    assertEquals("newEmail", values.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
-    assertEquals("newProject", values.get(DataflowPreferences.PROJECT_PROPERTY));
-    assertEquals("newStagingLocation", values.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
-    assertEquals("newStagingLocation", values.get(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY));
   }
 }

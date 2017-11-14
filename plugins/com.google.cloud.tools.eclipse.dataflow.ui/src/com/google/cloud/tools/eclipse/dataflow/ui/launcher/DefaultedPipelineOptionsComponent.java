@@ -17,6 +17,7 @@
 package com.google.cloud.tools.eclipse.dataflow.ui.launcher;
 
 import com.google.cloud.tools.eclipse.dataflow.core.preferences.DataflowPreferences;
+import com.google.cloud.tools.eclipse.dataflow.ui.Messages;
 import com.google.cloud.tools.eclipse.dataflow.ui.page.MessageTarget;
 import com.google.cloud.tools.eclipse.dataflow.ui.preferences.RunOptionsDefaultsComponent;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,14 +36,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 
 /**
- * A Component that contains a group of pipeline options that can be defaulted with {@link
- * DataflowPreferences}. Contains a Button (with Checkbox style) to enable and disable use of
- * defaults and a {@link RunOptionsDefaultsComponent} to input said defaults.
+ * A Component that contains a group of pipeline options that can be defaulted with
+ * {@link DataflowPreferences}. Contains a Button to re-load from defaults and a
+ * {@link RunOptionsDefaultsComponent} to input said defaults.
  */
 public class DefaultedPipelineOptionsComponent {
   private Group defaultsGroup;
 
-  private Button useDefaultsButton;
+  private Button loadDefaultsButton;
 
   private DataflowPreferences preferences;
   private Map<String, String> customValues;
@@ -66,59 +67,40 @@ public class DefaultedPipelineOptionsComponent {
     defaultsGroup.setLayout(new GridLayout(numColumns, false));
     defaultsGroup.setLayoutData(layoutData);
 
-    useDefaultsButton = new Button(defaultsGroup, SWT.CHECK);
-    useDefaultsButton.setText("Use &default Dataflow options");
-    useDefaultsButton.setSelection(true);
-
-    useDefaultsButton.addSelectionListener(new SetInputsEnabledOppositeButtonSelectionListener());
-    useDefaultsButton.addSelectionListener(new SetInputValuesToDefaultOrCustomSelectionListener());
-
-    useDefaultsButton.setLayoutData(
-        new GridData(SWT.BEGINNING, SWT.CENTER, true, false, numColumns, 1));
-
     this.defaultOptions = defaultOptions == null
         ? new RunOptionsDefaultsComponent(defaultsGroup, numColumns, messageTarget, preferences)
         : defaultOptions;
+
+    loadDefaultsButton = new Button(defaultsGroup, SWT.PUSH);
+    loadDefaultsButton.setText(Messages.getString("restore.defaults")); //$NON-NLS-1$
+
+    loadDefaultsButton.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        loadPreferences();
+      }
+    });
+
+    loadDefaultsButton
+        .setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false, numColumns, 1));
   }
 
-  public void setUseDefaultValues(boolean useDefaultValues) {
-    useDefaultsButton.setSelection(useDefaultValues);
-    updateDefaultableInputValues();
-    setWidgetsEnabled(!useDefaultValues);
-  }
-
-  public void setCustomValues(Map<String, String> customValues) {
-    this
-        .customValues.put(
-            DataflowPreferences.ACCOUNT_EMAIL_PROPERTY,
-            customValues.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
-    this
-        .customValues.put(
-            DataflowPreferences.PROJECT_PROPERTY,
-            customValues.get(DataflowPreferences.PROJECT_PROPERTY));
-    this
-        .customValues.put(
-            DataflowPreferences.STAGING_LOCATION_PROPERTY,
-            customValues.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
+  public void setCustomValues(Map<String, String> newValues) {
+    customValues.put(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY,
+        newValues.get(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY));
+    customValues.put(DataflowPreferences.PROJECT_PROPERTY,
+        newValues.get(DataflowPreferences.PROJECT_PROPERTY));
+    customValues.put(DataflowPreferences.STAGING_LOCATION_PROPERTY,
+        newValues.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
     // TODO: Select appropriate defaults based on major version
-    this
-        .customValues.put(
-            DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY,
-            customValues.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
-    if (!isUseDefaultOptions()) {
-      loadCustomValues();
-    }
+    customValues.put(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY,
+        newValues.get(DataflowPreferences.STAGING_LOCATION_PROPERTY));
+    loadCustomValues();
   }
 
   public void setPreferences(DataflowPreferences preferences) {
     this.preferences = preferences;
-    if (isUseDefaultOptions()) {
-      loadPreferences();
-    }
-  }
-
-  private void setWidgetsEnabled(boolean enabled) {
-    defaultOptions.setEnabled(enabled);
+    loadPreferences();
   }
 
   public Map<String, String> getValues() {
@@ -131,34 +113,8 @@ public class DefaultedPipelineOptionsComponent {
     return values;
   }
 
-  public boolean isUseDefaultOptions() {
-    return useDefaultsButton.getSelection();
-  }
-
-  /**
-   * If the dataflow preferences have changed or the inputs have been enabled or disabled, the
-   * values of the input components must be updated to the values that will be used.
-   */
-  private void updateDefaultableInputValues() {
-    if (isUseDefaultOptions()) {
-      saveCustomValues();
-      loadPreferences();
-    } else {
-      loadCustomValues();
-    }
-  }
-
-  private void saveCustomValues() {
-    customValues.put(DataflowPreferences.ACCOUNT_EMAIL_PROPERTY, defaultOptions.getAccountEmail());
-    customValues.put(DataflowPreferences.PROJECT_PROPERTY, defaultOptions.getProjectId());
-    customValues.put(DataflowPreferences.STAGING_LOCATION_PROPERTY,
-        defaultOptions.getStagingLocation());
-    // TODO: Give this a separate input
-    customValues.put(DataflowPreferences.GCP_TEMP_LOCATION_PROPERTY,
-        defaultOptions.getStagingLocation());
-  }
-
-  private void loadPreferences() {
+  @VisibleForTesting
+  void loadPreferences() {
     String defaultAccountEmail = preferences.getDefaultAccountEmail();
     defaultOptions.selectAccount(Strings.nullToEmpty(defaultAccountEmail));
     String defaultProject = preferences.getDefaultProject();
@@ -181,32 +137,10 @@ public class DefaultedPipelineOptionsComponent {
   }
 
   public void addButtonSelectionListener(SelectionListener listener) {
-    useDefaultsButton.addSelectionListener(listener);
+    loadDefaultsButton.addSelectionListener(listener);
   }
 
   public void addModifyListener(ModifyListener listener) {
     defaultOptions.addModifyListener(listener);
-  }
-
-  /**
-   * Set the enablement of the custom value inputs to the opposite of the {@code useDefaultsButton}.
-   */
-  private class SetInputsEnabledOppositeButtonSelectionListener extends SelectionAdapter {
-    @Override
-    public void widgetSelected(SelectionEvent e) {
-      setWidgetsEnabled(!useDefaultsButton.getSelection());
-    }
-  }
-
-  /**
-   * When the {@code useDefaultsButton} is selected, set the current text to the default values, and
-   * when it is unselected, if custom values exist, set the current text to the custom values.
-   */
-  private class SetInputValuesToDefaultOrCustomSelectionListener extends SelectionAdapter {
-    @Override
-    public void widgetSelected(SelectionEvent e) {
-      updateDefaultableInputValues();
-    }
-
   }
 }

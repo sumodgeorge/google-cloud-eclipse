@@ -432,13 +432,6 @@ public class RunOptionsDefaultsComponent {
     stagingLocationInput.addModifyListener(listener);
   }
 
-  public void setEnabled(boolean enabled) {
-    accountSelector.setEnabled(enabled);
-    projectInput.setEnabled(enabled);
-    stagingLocationInput.setEnabled(enabled);
-  }
-
-
   /**
    * Fetch the staging locations from GCS in a background task and update the Staging Locations
    * combo.

@@ -27,9 +27,7 @@ public enum PipelineConfigurationAttr {
   /** The runner to use in this launch. */
   RUNNER_ARGUMENT("RUNNER_ARGUMENT"),
   /** The class name for a custom user options class. */
-  USER_OPTIONS_NAME("USER_OPTIONS_CLASS_NAME"),
-  /** If launch options are defaulted when possible or are custom. */
-  USE_DEFAULT_LAUNCH_OPTIONS("USE_DEFAULT_LAUNCH_OPTIONS");
+  USER_OPTIONS_NAME("USER_OPTIONS_CLASS_NAME");
 
   private static final String DATAFLOW_NS = "com.google.cloud.dataflow.eclipse.";
 

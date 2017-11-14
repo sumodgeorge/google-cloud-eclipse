@@ -245,9 +245,10 @@ public class DataflowPipelineLaunchDelegate implements ILaunchConfigurationDeleg
   private Map<String, String> getEffectiveArguments(
       PipelineLaunchConfiguration pipelineConfig, DataflowPreferences preferences) {
     Map<String, String> argumentValues = new HashMap<>(pipelineConfig.getArgumentValues());
-    if (pipelineConfig.isUseDefaultLaunchOptions()) {
-      argumentValues.putAll(preferences.asDefaultPropertyMap());
-    }
+    // todo: check existing launch configs?
+    // if (pipelineConfig.isUseDefaultLaunchOptions()) {
+    // argumentValues.putAll(preferences.asDefaultPropertyMap());
+    // }
     return argumentValues;
   }
 

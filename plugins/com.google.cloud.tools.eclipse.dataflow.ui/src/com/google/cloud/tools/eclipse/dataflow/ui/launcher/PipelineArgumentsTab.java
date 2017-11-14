@@ -87,6 +87,9 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
 
   private static final String ARGUMENTS_SEPARATOR = "="; //$NON-NLS-1$
 
+  /** We previously supported always pulling values from the project or global defaults. */
+  private static final String LEGACY_USE_DEFAULT_LAUNCH_OPTIONS = "USE_DEFAULT_LAUNCH_OPTIONS";
+
   private Executor displayExecutor;
 
   private ScrolledComposite composite;
@@ -247,6 +250,7 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
       public void clear() {
         setErrorMessage(null);
         setMessage(null);
+        getLaunchConfigurationDialog().updateMessage();
       }
     };
 
@@ -262,8 +266,7 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
 
   @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-    launchConfiguration = PipelineLaunchConfiguration.createDefault();
-    launchConfiguration.toLaunchConfiguration(configuration);
+    LaunchPipelineShortcut.setDefaults(configuration);
   }
 
   @Override
@@ -271,12 +274,8 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
     PipelineRunner runner = getSelectedRunner();
     launchConfiguration.setRunner(runner);
 
-    launchConfiguration.setUseDefaultLaunchOptions(defaultOptionsComponent.isUseDefaultOptions());
-
     Map<String, String> overallArgValues = new HashMap<>(launchConfiguration.getArgumentValues());
-    if (!defaultOptionsComponent.isUseDefaultOptions()) {
-      overallArgValues.putAll(defaultOptionsComponent.getValues());
-    }
+    overallArgValues.putAll(defaultOptionsComponent.getValues());
     overallArgValues.putAll(getNonDefaultOptions());
     launchConfiguration.setArgumentValues(overallArgValues);
 
@@ -300,6 +299,14 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
     try {
       launchConfiguration = PipelineLaunchConfiguration.fromLaunchConfiguration(configuration);
 
+      // support older launch configurations that were configured to always pull
+      // defaults from the project or global defaults
+      boolean legacyUseDefaults =
+          configuration.getAttribute(LEGACY_USE_DEFAULT_LAUNCH_OPTIONS, false);
+      if (legacyUseDefaults) {
+        launchConfiguration.setArgumentValues(getPreferences().asDefaultPropertyMap());
+      }
+
       IProject project = getProject();
       MajorVersion majorVersion = MajorVersion.ONE;
       if (project != null && project.isAccessible()) {
@@ -312,7 +319,7 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
       updateRunnerButtons(majorVersion);
       updateHierarchy(majorVersion);
 
-      defaultOptionsComponent.setUseDefaultValues(launchConfiguration.isUseDefaultLaunchOptions());
+      // order is important: will cause custom values to be set
       defaultOptionsComponent.setPreferences(getPreferences());
       defaultOptionsComponent.setCustomValues(launchConfiguration.getArgumentValues());
 

@@ -16,9 +16,17 @@
 
 package com.google.cloud.tools.eclipse.dataflow.ui.launcher;
 
+import com.google.cloud.tools.eclipse.dataflow.core.launcher.PipelineLaunchConfiguration;
+import com.google.cloud.tools.eclipse.dataflow.core.preferences.DataflowPreferences;
+import com.google.cloud.tools.eclipse.dataflow.core.preferences.ProjectOrWorkspaceDataflowPreferences;
 import com.google.cloud.tools.eclipse.dataflow.ui.DataflowUiPlugin;
-
+import com.google.common.base.Strings;
+import com.google.common.base.Verify;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.debug.core.DebugPlugin;
@@ -72,6 +80,7 @@ public class LaunchPipelineShortcut implements ILaunchShortcut2 {
         configuration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
             mainMethod.getDeclaringType().getFullyQualifiedName());
       }
+      setDefaults(configuration);
 
       String groupIdentifier =
           mode.equals(ILaunchManager.RUN_MODE) ? IDebugUIConstants.ID_RUN_LAUNCH_GROUP
@@ -87,6 +96,46 @@ public class LaunchPipelineShortcut implements ILaunchShortcut2 {
       DataflowUiPlugin.logError(e, "Error while launching new Launch Configuration for project %s",
           resource.getProjectName());
     }
+  }
+
+  /**
+   * Initialize with default parameters.
+   */
+  static void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+    PipelineLaunchConfiguration pipelineConfiguration = PipelineLaunchConfiguration.createDefault();
+    try {
+      // initialize with project or workspace defaults
+      String projectName =
+          configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, ""); //$NON-NLS-1$
+      IProject project = resolveProject(projectName);
+      DataflowPreferences preferences =
+          project != null ? ProjectOrWorkspaceDataflowPreferences.forProject(project)
+              : ProjectOrWorkspaceDataflowPreferences.forWorkspace();
+      pipelineConfiguration.setArgumentValues(preferences.asDefaultPropertyMap());
+    } catch (CoreException ex) {
+      DataflowUiPlugin.logError(ex, "Exception while trying to retrieve Dataflow preferences"); //$NON-NLS-1$
+    }
+    pipelineConfiguration.toLaunchConfiguration(configuration);
+  }
+
+  /**
+   * Find the project with the given name (may be {@code null} or empty).
+   * 
+   * @return the project or {@code null} if not found
+   */
+  private static IProject resolveProject(String projectName) {
+    if (Strings.isNullOrEmpty(projectName)) {
+      return null;
+    }
+    IProject project = getWorkspaceRoot().getProject(projectName);
+    return project.isAccessible() ? project : null;
+  }
+
+  private static IWorkspaceRoot getWorkspaceRoot() {
+    IWorkspace workspace = ResourcesPlugin.getWorkspace();
+    Verify.verifyNotNull(workspace);
+    Verify.verifyNotNull(workspace.getRoot());
+    return workspace.getRoot();
   }
 
   private void launch(ILaunchConfiguration[] configurations, IResource resource, String mode) {
