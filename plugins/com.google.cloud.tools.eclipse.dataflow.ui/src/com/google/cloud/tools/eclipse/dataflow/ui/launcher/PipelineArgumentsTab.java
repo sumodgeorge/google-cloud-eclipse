@@ -87,8 +87,11 @@ public class PipelineArgumentsTab extends AbstractLaunchConfigurationTab {
 
   private static final String ARGUMENTS_SEPARATOR = "="; //$NON-NLS-1$
 
-  /** We previously supported always pulling values from the project or global defaults. */
-  private static final String LEGACY_USE_DEFAULT_LAUNCH_OPTIONS = "USE_DEFAULT_LAUNCH_OPTIONS";
+  /**
+   * The attribute key for a legacy feature: we previously supported always pulling values from the
+   * project or global defaults. This doesn't make sense with supporting setting partial defaults.
+   */
+  private static final String LEGACY_USE_DEFAULT_LAUNCH_OPTIONS = "USE_DEFAULT_LAUNCH_OPTIONS"; //$NON-NLS-1$
 
   private Executor displayExecutor;
 

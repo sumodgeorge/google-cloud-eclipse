@@ -155,7 +155,8 @@ public class PipelineLaunchConfigurationTest {
   @Test
   public void testGetMissingRequiredPropertiesWithDefaultPropertiesAndDefault() {
     PipelineOptionsProperty property = new PipelineOptionsProperty(
-        DataflowPreferences.PROJECT_PROPERTY, false, true, Collections.<String>emptySet(), null);
+        DataflowPreferences.PROJECT_PROPERTY, false /* defaultProvided */, true /* required */,
+        Collections.<String>emptySet()/* groups */, null /* description */);
     PipelineOptionsHierarchy opts = options(property);
 
     PipelineLaunchConfiguration lc = PipelineLaunchConfiguration.createDefault();
