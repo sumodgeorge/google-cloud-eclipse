@@ -360,7 +360,7 @@
         <plugin>
           <groupId>org.eclipse.scout</groupId>
           <artifactId>eclipse-settings-maven-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>3.0.3</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -694,4 +694,13 @@
       </snapshots>
     </repository>
   </repositories>
+
+  <pluginRepositories>
+    <!-- required until eclipse-settings-maven-plugin 3.0.3 is distributed to Maven Central -->
+    <pluginRepository>
+      <id>bsi-bintray</id>
+      <name>BSI Maven Repo</name>
+      <url>https://dl.bintray.com/bsi-business-systems-integration-ag/scout-eclipse-org/</url>
+    </pluginRepository>
+  </pluginRepositories>
 </project>

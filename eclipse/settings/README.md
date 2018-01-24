@@ -15,6 +15,8 @@ The settings currently reflect the following choices:
   - serializable classes without `serialVersionUID` are _ignored_
   - redundant generic type argument are _errors_
 
+Our projects are configured to re-apply these changes frequently.
+
 ## Updating the Settings
 
 The settings require installing the [Google Java Format plugin for
@@ -48,30 +50,19 @@ a Maven `jar` artifact.  This published jar is then used by the
 The settings files themselves are found in in this project under
 [`files/`](files/).
 
-To publish the settings, run the following to assemble the jar and
-install it in your local repository (`~/.m2/repository/`)
+To publish the settings, update this project's version, commit, and
+then run the following to assemble the jar and deploy it to the
+canonical repository.
 
 ```sh
 $ cd eclipse/settings
-$ mvn install
+$ mvn deploy
 ```
 
 ### Step 2: Applying the Settings
 
-Once the settings are available, the second step invokes the
-`eclipse-settings-maven-plugin`'s `eclipse-settings` goal to resolve
-the settings artifact and extract the contents to the appropriate
-locations.  Run the following:
-
-```
-$ cd plugins
-$ mvn --no-snapshot-updates -Dtycho.mode=maven eclipse-settings:eclipse-settings
-```
-
-The `--no-snapshot-updates` is required to resolve the settings
-artifact from the local repository.  The `-Dtycho.mode=maven` speeds
-up the process.
-
-### Step 3: Commit
-
-You should then commit the result.
+Once the settings are available, applying the changes requires
+updating the `eclipse-settings-maven-plugin` dependency version in
+`plugins/pom.xml`.  M2Eclipse should then automatically trigger the
+`eclipse-settings-maven-plugin:eclipse-settings` goal to apply the
+changes.
