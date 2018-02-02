@@ -104,8 +104,9 @@
     <!-- by default enable GTK3 support -->
     <swt.gtk3>1</swt.gtk3>
 
-    <!-- log surefire tests to stdout -->
+    <!-- log surefire tests output and console output -->
     <tycho.showEclipseLog>true</tycho.showEclipseLog>
+    <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
 
     <!--
       A round-about way for the jacoco-maven-plugin to provide its
