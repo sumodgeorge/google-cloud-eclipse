@@ -35,6 +35,7 @@ before_script:
   - metacity --sm-disable --replace &
   - sleep 3 # give metacity some time to start
 script: ./mvnw -V -B --fail-at-end verify ${MAVEN_FLAGS}
+     $(if [ "$TRAVIS_PULL_REQUEST" != false ]; then echo -o; fi)
      -Ptravis -Perrorprone
      ${ECLIPSE_TARGET:+-Declipse.target=${ECLIPSE_TARGET}}
      --toolchains=.travisci/toolchains.xml
