@@ -101,7 +101,6 @@ public class PluggableJobTest {
     final CyclicBarrier barrier = new CyclicBarrier(2);
     PluggableJob<Object> job = new PluggableJob<>("name", new Callable<Object>() {
       @Override
-    PluggableJob<Object> job = new PluggableJob<Object>("name", new Callable<Object>() {
       public Object call() {
         try {
           barrier.await(); // job started: should release main thread
