@@ -5,12 +5,13 @@
   <!-- begin App Engine standard -->
   <extension point="org.eclipse.ui.newWizards">
      <wizard
-            id="com.google.cloud.tools.eclipse.appengine.newproject.AppEngineStandard"
-            name="%standard.wizard.name"
-            class="com.google.cloud.tools.eclipse.util.service.ServiceContextFactory:com.google.cloud.tools.eclipse.appengine.newproject.standard.AppEngineStandardProjectWizard"
-            icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gae-16x16.png"
-            project="true"
-            category="com.google.cloud.tools.eclipse.wizards">
+           category="com.google.cloud.tools.eclipse.wizards"
+           class="com.google.cloud.tools.eclipse.util.service.ServiceContextFactory:com.google.cloud.tools.eclipse.appengine.newproject.standard.AppEngineStandardProjectWizard"
+           finalPerspective="org.eclipse.jst.j2ee.J2EEPerspective"
+           icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gae-16x16.png"
+           id="com.google.cloud.tools.eclipse.appengine.newproject.AppEngineStandard"
+           name="%standard.wizard.name"
+           project="true">
          <description>%standard.wizard.description</description>
          <selection class="org.eclipse.core.resources.IResource"/>
          <keywordReference id="com.google.cloud.tools.eclipse.ui.GCPKeyword"/>
@@ -52,12 +53,13 @@
   <!-- begin App Engine flex -->
   <extension point="org.eclipse.ui.newWizards">
      <wizard
-            id="com.google.cloud.tools.eclipse.appengine.newproject.AppEngineFlex"
-            name="%flex.wizard.name"
-            class="com.google.cloud.tools.eclipse.util.service.ServiceContextFactory:com.google.cloud.tools.eclipse.appengine.newproject.flex.AppEngineFlexProjectWizard"
-            icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gae-16x16.png"
-            project="true"
-            category="com.google.cloud.tools.eclipse.wizards">
+           category="com.google.cloud.tools.eclipse.wizards"
+           class="com.google.cloud.tools.eclipse.util.service.ServiceContextFactory:com.google.cloud.tools.eclipse.appengine.newproject.flex.AppEngineFlexProjectWizard"
+           finalPerspective="org.eclipse.jst.j2ee.J2EEPerspective"
+           icon="platform:/plugin/com.google.cloud.tools.eclipse.appengine.ui/icons/gae-16x16.png"
+           id="com.google.cloud.tools.eclipse.appengine.newproject.AppEngineFlex"
+           name="%flex.wizard.name"
+           project="true">
          <description>%flex.wizard.description</description>
          <selection class="org.eclipse.core.resources.IResource"/>
          <keywordReference id="com.google.cloud.tools.eclipse.ui.GCPKeyword"/>

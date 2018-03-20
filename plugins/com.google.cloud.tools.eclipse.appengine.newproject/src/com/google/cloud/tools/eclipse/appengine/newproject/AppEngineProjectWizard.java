@@ -17,23 +17,34 @@
 package com.google.cloud.tools.eclipse.appengine.newproject;
 
 import com.google.cloud.tools.eclipse.ui.util.WorkbenchUtil;
+import com.google.cloud.tools.eclipse.util.service.ServiceContextFactory;
 import com.google.cloud.tools.eclipse.util.status.StatusUtil;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.InvocationTargetException;
+import javax.inject.Inject;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
+import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard;
 
+/**
+ * Base class for App Engine projection creation.
+ *
+ * <p>Expected to be created via the {@link ServiceContextFactory}.
+ */
 public abstract class AppEngineProjectWizard extends Wizard implements INewWizard {
 
   private final AppEngineWizardPage appEnginePage;
   protected final AppEngineProjectConfig config = new AppEngineProjectConfig();
   private IWorkbench workbench;
+
+  @Inject private IConfigurationElement configElement;
 
   public AppEngineProjectWizard(AppEngineWizardPage appEngineWizardPage) {
     appEnginePage = Preconditions.checkNotNull(appEngineWizardPage);
@@ -73,8 +84,12 @@ public abstract class AppEngineProjectWizard extends Wizard implements INewWizar
       boolean cancelable = true;
       getContainer().run(fork, cancelable, runnable);
 
+      // prompt to switch to preferred perspective
+      BasicNewProjectResourceWizard.updatePerspective(configElement);
+
       // open most important file created by wizard in editor
       IFile file = runnable.getMostImportant();
+      BasicNewProjectResourceWizard.selectAndReveal(file, workbench.getActiveWorkbenchWindow());
       WorkbenchUtil.openInEditor(workbench, file);
       return true;
     } catch (InterruptedException ex) {

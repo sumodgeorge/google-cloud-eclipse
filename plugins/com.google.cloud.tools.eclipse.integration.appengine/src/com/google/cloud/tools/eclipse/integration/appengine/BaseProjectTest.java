@@ -31,6 +31,7 @@ import org.eclipse.swtbot.swt.finder.utils.SWTBotPreferences;
 import org.eclipse.swtbot.swt.finder.utils.SWTUtils;
 import org.eclipse.swtbot.swt.finder.widgets.TimeoutException;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
@@ -43,7 +44,7 @@ public class BaseProjectTest {
   protected IProject project;
 
   @BeforeClass
-  public static void setUp() throws Exception {
+  public static void setUpWorkbench() throws Exception {
     // verify we can find the Google Cloud SDK
     new CloudSdk.Builder().build().validateCloudSdk();
 
@@ -53,6 +54,12 @@ public class BaseProjectTest {
     } catch (WidgetNotFoundException ex) {
       // may receive WNFE: "There is no active view"
     }
+  }
+
+  @Before
+  public void setUp() {
+    // pre-emptively change to avoid any perspective-switch dialogs
+    bot.perspectiveById("org.eclipse.jst.j2ee.J2EEPerspective").activate();
   }
 
   @After
