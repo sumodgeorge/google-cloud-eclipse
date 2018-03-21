@@ -635,33 +635,38 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
     private final IOConsole console;
 
     // Fire a {@link DebugEvent#TERMINATED} event when the server is stopped
-    private IServerListener serverEventsListener = new IServerListener() {
-      @Override
-      public void serverChanged(ServerEvent event) {
-        Preconditions.checkState(server == event.getServer());
-        switch (event.getState()) {
-          case IServer.STATE_STARTED:
-            openBrowserPage(server);
-            fireChangeEvent(DebugEvent.STATE);
-            return;
-
-          case IServer.STATE_STOPPED:
-            server.removeServerListener(serverEventsListener);
-            fireTerminateEvent();
-            try {
-              logger.fine("Server stopped; terminating launch"); //$NON-NLS-1$
-              launch.terminate();
-            } catch (DebugException ex) {
-              logger.log(Level.WARNING, "Unable to terminate launch", ex); //$NON-NLS-1$
+    private IServerListener serverEventsListener =
+        new IServerListener() {
+          @Override
+          public void serverChanged(ServerEvent event) {
+            Preconditions.checkState(server == event.getServer());
+            if ((event.getKind() & ServerEvent.STATE_CHANGE) == 0) {
+              return;
             }
-            return;
+            
+            switch (event.getState()) {
+              case IServer.STATE_STARTED:
+                openBrowserPage(server);
+                fireChangeEvent(DebugEvent.STATE);
+                return;
 
-          default:
-            fireChangeEvent(DebugEvent.STATE);
-            return;
-        }
-      }
-    };
+              case IServer.STATE_STOPPED:
+                server.removeServerListener(serverEventsListener);
+                fireTerminateEvent();
+                try {
+                  logger.fine("Server stopped; terminating launch"); // $NON-NLS-1$
+                  launch.terminate();
+                } catch (DebugException ex) {
+                  logger.log(Level.WARNING, "Unable to terminate launch", ex); // $NON-NLS-1$
+                }
+                return;
+
+              default:
+                fireChangeEvent(DebugEvent.STATE);
+                return;
+            }
+          }
+        };
 
     private ILaunchesListener2 launchesListener = new ILaunchesListener2() {
       @Override
