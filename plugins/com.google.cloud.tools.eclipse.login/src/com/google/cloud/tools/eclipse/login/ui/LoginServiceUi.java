@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.window.IShellProvider;
@@ -137,18 +138,23 @@ public class LoginServiceUi implements UiFacade {
       };
 
       final String[] codeHolder = new String[1];
-      dialog.run(true /* fork */, true /* cancelable */, monitor -> {
-        AnalyticsPingManager.getInstance().sendPingOnShell(dialog.getShell(),
-            AnalyticsEvents.LOGIN_START);
-
-        monitor.beginTask(Messages.getString("LOGIN_PROGRESS_DIALOG_MESSAGE"),
-            IProgressMonitor.UNKNOWN);
-        try {
-          codeHolder[0] = codeReceiver.waitForCode();
-        } catch (IOException ioe) {
-          throw new InvocationTargetException(ioe);
-        }
-      });
+      dialog.run(
+          true /* fork */,
+          true /* cancelable */,
+          monitor -> {
+            AnalyticsPingManager.getInstance()
+                .sendPingOnShell(dialog.getShell(), AnalyticsEvents.LOGIN_START);
+            monitor =
+                SubMonitor.convert(
+                    monitor,
+                    Messages.getString("LOGIN_PROGRESS_DIALOG_MESSAGE"),
+                    IProgressMonitor.UNKNOWN);
+            try {
+              codeHolder[0] = codeReceiver.waitForCode();
+            } catch (IOException ioe) {
+              throw new InvocationTargetException(ioe);
+            }
+          });
 
       if (dialog.getReturnCode() == Window.CANCEL) {
         // Should be done after the dialog closes; don't do this in "cancelPressed()".
