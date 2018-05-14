@@ -22,7 +22,6 @@ import com.google.cloud.tools.appengine.cloudsdk.CloudSdk;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkNotFoundException;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkOutOfDateException;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkVersionFileException;
-import com.google.cloud.tools.appengine.cloudsdk.InvalidJavaSdkException;
 import com.google.cloud.tools.eclipse.preferences.areas.PreferenceArea;
 import com.google.cloud.tools.eclipse.sdk.CloudSdkManager;
 import com.google.cloud.tools.eclipse.sdk.internal.CloudSdkPreferences;
@@ -184,7 +183,7 @@ public class CloudSdkPreferenceArea extends PreferenceArea {
           // look in default locations; see
           // https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues/2897
           CloudSdk sdk = new CloudSdk.Builder().build();
-          location = sdk.getSdkPath().toString();
+          location = sdk.getPath().toString();
           version = sdk.getVersion().toString();
           // ends up calling this method again
           sdkLocation.setStringValue(location);
@@ -286,7 +285,7 @@ public class CloudSdkPreferenceArea extends PreferenceArea {
 
   private static Path getDefaultSdkLocation() {
     try {
-      return new CloudSdk.Builder().build().getSdkPath();
+      return new CloudSdk.Builder().build().getPath();
     } catch (AppEngineException ex) {
       return null;
     }
@@ -308,10 +307,6 @@ public class CloudSdkPreferenceArea extends PreferenceArea {
     } catch (AppEngineJavaComponentsNotInstalledException ex) {
       status = new Status(IStatus.WARNING, getClass().getName(),
           Messages.getString("AppEngineJavaComponentsNotInstalled", ex.getMessage())); //$NON-NLS-1$
-      return false;
-    } catch (InvalidJavaSdkException ex) {
-      status = new Status(IStatus.WARNING, getClass().getName(),
-          Messages.getString("JavaNotInstalled", ex.getMessage())); //$NON-NLS-1$
       return false;
     } catch (CloudSdkOutOfDateException | CloudSdkVersionFileException ex) {
       status = new Status(IStatus.ERROR, getClass().getName(),

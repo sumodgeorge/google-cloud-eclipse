@@ -36,8 +36,8 @@ public class GcloudStructuredLogErrorMessageCollector implements ProcessOutputLi
   public void onOutputLine(String line) {
     try {
       GcloudStructuredLog log = GcloudStructuredLog.parse(line);
-      if (log != null && log.getVerbosity() != null
-          && log.getVerbosity().toUpperCase(Locale.US).equals("ERROR")) {
+      String verbosity = log.getVerbosity();
+      if (verbosity != null && verbosity.toUpperCase(Locale.US).equals("ERROR")) {
         if (log.getMessage() == null || log.getMessage().trim().isEmpty()) {
           errorMessages.add("no error message provided");
         } else {
