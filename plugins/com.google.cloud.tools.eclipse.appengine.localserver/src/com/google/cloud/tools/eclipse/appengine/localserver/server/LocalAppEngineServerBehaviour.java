@@ -380,7 +380,7 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
 
     LocalRun localRun = LocalRun.builder(cloudSdk).build();
     devServer = LocalAppEngineServerLaunchConfigurationDelegate.DEV_APPSERVER2
-        ? localRun.newDevAppServer1(processHandler)
+        ? localRun.newDevAppServer2(processHandler)
         : localRun.newDevAppServer1(processHandler);
     moduleToUrlMap.clear();
   }
