@@ -97,14 +97,6 @@ public class DeployJob extends WorkspaceJob {
             new CoreException(installStatus));
       }
 
-      progress.subTask("Saving credential");
-      Path credentialFile = workDirectory.append(CREDENTIAL_FILENAME).toFile().toPath();
-
-      IStatus saveStatus = saveCredential(credentialFile);
-      if (saveStatus != Status.OK_STATUS) {
-        return saveStatus;
-      }
-
       progress.subTask("Staging project files");
       IPath stagingDirectory = workDirectory.append(STAGING_DIRECTORY_NAME);
       IStatus stagingStatus = stageProject(stagingDirectory, progress.newChild(30));
@@ -115,7 +107,7 @@ public class DeployJob extends WorkspaceJob {
       }
 
       progress.subTask("Deploying staged project");
-      IStatus deployStatus = deployProject(credentialFile, stagingDirectory, progress.newChild(70));
+      IStatus deployStatus = deployProject(stagingDirectory, progress.newChild(70));
       if (deployStatus != Status.OK_STATUS) {
         return deployStatus;
       } else if (monitor.isCanceled()) {
@@ -130,18 +122,8 @@ public class DeployJob extends WorkspaceJob {
 
   @Override
   protected void canceling() {
-    stager.interrupt();
     deployer.interrupt();
     super.canceling();
-  }
-
-  private IStatus saveCredential(Path destination) {
-    try {
-      CredentialHelper.toJsonFile(credential, destination);
-      return Status.OK_STATUS;
-    } catch (IOException ex) {
-      return StatusUtil.error(this, Messages.getString("save.credential.failed"), ex);
-    }
   }
 
   private IStatus stageProject(IPath stagingDirectory, IProgressMonitor monitor) {
@@ -159,14 +141,16 @@ public class DeployJob extends WorkspaceJob {
     }
   }
 
-  private IStatus deployProject(Path credentialFile, IPath stagingDirectory, IProgressMonitor monitor) {
-    IPath optionalConfigurationFilesDirectory = null;
-    if (deployPreferences.isIncludeOptionalConfigurationFiles()) {
-      optionalConfigurationFilesDirectory = stager.getOptionalConfigurationFilesDirectory();
-    }
+  private IStatus deployProject(IPath stagingDirectory, IProgressMonitor monitor) {
+    try {
+      Path credentialFile = workDirectory.append(CREDENTIAL_FILENAME).toFile().toPath();
+      CredentialHelper.toJsonFile(credential, credentialFile);
 
-    return deployer.deploy(stagingDirectory, credentialFile, deployPreferences,
-        optionalConfigurationFilesDirectory, stdoutOutputStream, monitor);
+      return deployer.deploy(credentialFile, deployPreferences, stager.getDeployablesDirectory(),
+          stdoutOutputStream, monitor);
+    } catch (IOException ex) {
+      return StatusUtil.error(this, Messages.getString("save.credential.failed"), ex);
+    }
   }
 
   private IStatus openAppInBrowser() {

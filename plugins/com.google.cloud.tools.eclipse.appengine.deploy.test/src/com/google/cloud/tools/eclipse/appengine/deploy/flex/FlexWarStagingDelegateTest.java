@@ -65,6 +65,6 @@ public class FlexWarStagingDelegateTest {
   public void testGetOptionalConfigurationFilesDirectory() {
     StagingDelegate delegate = new FlexWarStagingDelegate(project, appEngineDirectory);
 
-    assertEquals(appEngineDirectory, delegate.getOptionalConfigurationFilesDirectory());
+    assertEquals(appEngineDirectory, delegate.getDeployablesDirectory());
   }
 }

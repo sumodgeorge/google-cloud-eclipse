@@ -17,9 +17,7 @@
 package com.google.cloud.tools.eclipse.appengine.deploy;
 
 import com.google.cloud.tools.appengine.api.AppEngineException;
-import com.google.cloud.tools.appengine.api.deploy.AppEngineStandardStaging;
 import com.google.cloud.tools.appengine.api.deploy.DefaultStageFlexibleConfiguration;
-import com.google.cloud.tools.appengine.api.deploy.DefaultStageStandardConfiguration;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkAppEngineFlexibleStaging;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,36 +28,6 @@ import org.eclipse.core.runtime.SubMonitor;
  * Calls the staging operation on an App Engine project.
  */
 public class CloudSdkStagingHelper {
-
-  public static final String STANDARD_STAGING_GENERATED_FILES_DIRECTORY =
-      "WEB-INF/appengine-generated";
-
-  /**
-   * @param explodedWarDirectory the input of the staging operation
-   * @param stagingDirectory where the result of the staging operation will be written
-   * @param appEngineStandardStaging executes the staging operation
-   * @throws AppEngineException when staging fails
-   */
-  public static void stageStandard(IPath explodedWarDirectory, IPath stagingDirectory,
-      AppEngineStandardStaging appEngineStandardStaging, IProgressMonitor monitor)
-          throws AppEngineException {
-    if (monitor.isCanceled()) {
-      throw new OperationCanceledException("canceled early");
-    }
-
-    SubMonitor progress = SubMonitor.convert(monitor, 1);
-    progress.setTaskName(Messages.getString("task.name.stage.project")); //$NON-NLS-1$
-
-    DefaultStageStandardConfiguration stagingConfig = new DefaultStageStandardConfiguration();
-    stagingConfig.setSourceDirectory(explodedWarDirectory.toFile());
-    stagingConfig.setStagingDirectory(stagingDirectory.toFile());
-    stagingConfig.setEnableJarSplitting(true);
-    stagingConfig.setDisableUpdateCheck(true);
-
-    appEngineStandardStaging.stageStandard(stagingConfig);
-
-    progress.worked(1);
-  }
 
   /**
    * @param appEngineDirectory directory containing {@code app.yaml}

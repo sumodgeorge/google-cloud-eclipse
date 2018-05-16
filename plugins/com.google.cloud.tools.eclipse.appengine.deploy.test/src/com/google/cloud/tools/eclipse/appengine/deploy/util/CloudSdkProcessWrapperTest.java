@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.appengine.api.deploy.AppEngineDeployment;
-import com.google.cloud.tools.appengine.api.deploy.AppEngineStandardStaging;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,29 +70,12 @@ public class CloudSdkProcessWrapperTest {
   }
 
   @Test
-  public void testGetAppEngineStandardStaging() throws CloudSdkNotFoundException {
-    AppEngineStandardStaging staging = wrapper.getAppEngineStandardStaging(null, null, null);
-    assertNotNull(staging);
-  }
-
-  @Test
   public void testGetAppEngineDeployment_cannotSetUpTwice()
       throws IOException, CloudSdkNotFoundException {
     Path credential = tempFolder.newFile().toPath();
     wrapper.getAppEngineDeployment(credential, null);
     try {
       wrapper.getAppEngineDeployment(credential, null);
-      fail();
-    } catch (IllegalStateException ex) {
-      assertEquals(ex.getMessage(), "process wrapper already set up");
-    }
-  }
-
-  @Test
-  public void testGetAppEngineStandardStaging_cannotSetUpTwice() throws CloudSdkNotFoundException {
-    wrapper.getAppEngineStandardStaging(null, null, null);
-    try {
-      wrapper.getAppEngineStandardStaging(null, null, null);
       fail();
     } catch (IllegalStateException ex) {
       assertEquals(ex.getMessage(), "process wrapper already set up");

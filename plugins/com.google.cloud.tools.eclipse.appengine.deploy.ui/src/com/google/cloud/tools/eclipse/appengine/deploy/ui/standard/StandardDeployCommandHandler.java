@@ -27,7 +27,6 @@ import com.google.cloud.tools.eclipse.googleapis.IGoogleApiFactory;
 import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
 import com.google.cloud.tools.eclipse.util.jdt.JreDetector;
-import java.nio.file.Path;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
@@ -94,17 +93,7 @@ public class StandardDeployCommandHandler extends DeployCommandHandler {
 
   @Override
   protected StagingDelegate getStagingDelegate(IProject project) {
-    Path javaHome = null;
-    try {
-      IJavaProject javaProject = JavaCore.create(project);
-      IVMInstall vmInstall = JavaRuntime.getVMInstall(javaProject);
-      if (vmInstall != null) {
-        javaHome = vmInstall.getInstallLocation().toPath();
-      }
-    } catch (CoreException ex) {
-      // Give up.
-    }
-    return new StandardStagingDelegate(project, javaHome);
+    return new StandardStagingDelegate(project);
   }
 
   @Override

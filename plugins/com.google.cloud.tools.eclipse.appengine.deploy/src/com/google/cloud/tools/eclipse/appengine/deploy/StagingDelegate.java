@@ -49,22 +49,14 @@ public interface StagingDelegate {
   ISchedulingRule getSchedulingRule();
 
   /**
-   * Returns a directory where optional YAML configuration files such as {@code cron.yaml}
-   * that may be deployed together reside.
+   * Returns a directory where deployable target files ({@code app.yaml, appengine-web.xml,
+   * cron.yaml, cron.xml, ...}) reside.
    *
-   * Conventionally, for App Engine standard, this directory is found inside the staging directory.
-   * ({@code appcfg.sh} converts XML configuration files to YAML and puts them under {@code
-   * <staging-directory>/WEB-INF/appengine-generated}). For App Engine flexible, this is usually the
-   * directory where {@code app.yaml} is located, which may or may not be inside project source.
+   * Conventionally, for App Engine standard, this directory is {@code WEB-INF} in the staging
+   * directory. For App Engine flexible, this directory may or may not be inside project source.
    *
    * Must be called after successful {@link #stage} (for standard deploy).
    */
-  IPath getOptionalConfigurationFilesDirectory();
-
-  /**
-   * Does not guarantee cancellation/termination. This can be called concurrently from a different
-   * thread than the thread running {@link #stage}.
-   */
-  void interrupt();
+  IPath getDeployablesDirectory();
 
 }

@@ -17,8 +17,6 @@
 package com.google.cloud.tools.eclipse.appengine.deploy.util;
 
 import com.google.cloud.tools.appengine.api.deploy.AppEngineDeployment;
-import com.google.cloud.tools.appengine.api.deploy.AppEngineStandardStaging;
-import com.google.cloud.tools.appengine.cloudsdk.AppCfg;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdk;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkNotFoundException;
 import com.google.cloud.tools.appengine.cloudsdk.Gcloud;
@@ -28,7 +26,6 @@ import com.google.cloud.tools.appengine.cloudsdk.process.ProcessOutputLineListen
 import com.google.cloud.tools.appengine.cloudsdk.process.StringBuilderProcessOutputLineListener;
 import com.google.cloud.tools.eclipse.appengine.deploy.AppEngineProjectDeployer;
 import com.google.cloud.tools.eclipse.appengine.deploy.Messages;
-import com.google.cloud.tools.eclipse.appengine.deploy.standard.StandardStagingDelegate;
 import com.google.cloud.tools.eclipse.sdk.GcloudStructuredLogErrorMessageCollector;
 import com.google.cloud.tools.eclipse.sdk.MessageConsoleWriterListener;
 import com.google.cloud.tools.eclipse.util.CloudToolsInfo;
@@ -44,10 +41,10 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 /**
- * Helper class wrapping a process induced by {@link CloudSdk} to hide the bulk of low-level work
+ * Helper class wrapping a process induced by {@link Gcloud} to hide the bulk of low-level work
  * dealing with process cancellation, process exit monitoring, error output line collection,
  * standard output collection, etc. Intended to be used exclusively by {@link
- * StandardStagingDelegate} and {@link AppEngineProjectDeployer} for their convenience.
+ * AppEngineProjectDeployer} for its convenience.
  */
 public class CloudSdkProcessWrapper {
 
@@ -55,16 +52,13 @@ public class CloudSdkProcessWrapper {
   private boolean interrupted;
   private IStatus exitStatus = Status.OK_STATUS;
   private ProcessOutputLineListener stdOutCaptor;
-  private boolean initialized = false;
+  private boolean initialized;
 
-  /**
-   * Collects messages of any gcloud structure log lines whose severity is ERROR. Note that the
-   * collector is not used for staging, as the staging does not invoke gcloud.
-   */
+  /** Collects messages of any gcloud structure log lines whose severity is ERROR. */
   private GcloudStructuredLogErrorMessageCollector gcloudErrorMessageCollector;
 
   /**
-   * Sets up a {@link CloudSdk} to be used for App Engine deploy.
+   * Sets up an {@link AppEngineDeployment} to be used for App Engine deploy.
    */
   public AppEngineDeployment getAppEngineDeployment(Path credentialFile,
       MessageConsoleStream normalOutputStream) throws CloudSdkNotFoundException {
@@ -96,32 +90,6 @@ public class CloudSdkProcessWrapper {
         .build();
 
     return gcloud.newDeployment(processHandler);
-  }
-
-  /**
-   * Sets up a {@link CloudSdk} to be used for App Engine standard staging.
-   *
-   * @param javaHome JDK/JRE to 1) run {@code com.google.appengine.tools.admin.AppCfg} from
-   *     {@code appengine-tools-api.jar}; and 2) compile JSPs during staging
-   */
-  public AppEngineStandardStaging getAppEngineStandardStaging(Path javaHome,
-      MessageConsoleStream stdoutOutputStream, MessageConsoleStream stderrOutputStream) 
-          throws CloudSdkNotFoundException {
-    Preconditions.checkState(!initialized, "process wrapper already set up");
-    initialized = true;
-
-    CloudSdk cloudSdk = javaHome == null
-        ? new CloudSdk.Builder().build()
-        : new CloudSdk.Builder().javaHome(javaHome).build();
-
-    ProcessHandler processHandler = LegacyProcessHandler.builder()
-        .setStartListener(this::storeProcessObject)
-        .setExitListener(this::recordProcessExitCode)
-        .addStdOutLineListener(new MessageConsoleWriterListener(stdoutOutputStream))
-        .addStdErrLineListener(new MessageConsoleWriterListener(stderrOutputStream))
-        .build();
-
-    return AppCfg.builder(cloudSdk).build().newStaging(processHandler);
   }
 
   public void interrupt() {

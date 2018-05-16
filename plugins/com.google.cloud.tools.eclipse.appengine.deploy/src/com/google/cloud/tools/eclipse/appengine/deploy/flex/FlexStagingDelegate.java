@@ -72,13 +72,8 @@ abstract class FlexStagingDelegate implements StagingDelegate {
       throws CoreException;
 
   @Override
-  public IPath getOptionalConfigurationFilesDirectory() {
+  public IPath getDeployablesDirectory() {
     return appEngineDirectory;
-  }
-
-  @Override
-  public void interrupt() {
-    // It's enough to leave it to the normal cancellation flow through monitor.
   }
 
 }
