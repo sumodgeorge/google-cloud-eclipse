@@ -12,8 +12,8 @@ gsutil -q cp "gs://ct4e-m2-repositories/m2-oxygen.tar" - \
   | tar -C "${HOME}" -xf -
 
 export CLOUDSDK_CORE_DISABLE_USAGE_REPORTING=true
-gcloud components update --quiet
-gcloud components install app-engine-java --quiet
+#gcloud components update --quiet
+#gcloud components install app-engine-java --quiet
 
 echo "OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}"
 echo "OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}"
@@ -38,4 +38,4 @@ TMPDIR= xvfb-run \
       -Doauth.client.secret="${OAUTH_CLIENT_SECRET}" \
       -Dga.tracking.id="${ANALYTICS_TRACKING_ID}" \
       ${PRODUCT_VERSION_SUFFIX:+-Dproduct.version.qualifier.suffix="'${PRODUCT_VERSION_SUFFIX}'"} \
-    clean verify
+    clean package
