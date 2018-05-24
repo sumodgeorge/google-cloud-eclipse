@@ -61,22 +61,22 @@ public class CloudSdkUpdateNotificationTest {
   }
 
   @Test
-  public void testNotTriggeredOnCancelLink() {
+  public void testTriggeredOnSkipLink() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
         new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
-    notification.linkSelected("cancel");
+    notification.linkSelected("skip");
     verify(trigger, never()).run();
   }
 
   @Test
-  public void testNoTriggerOnCloseButton() {
+  public void testTriggerOnCloseButton() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
         new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
     notification.open();
     notification.close();
-    verify(trigger, never()).run();
+    verify(trigger).run();
   }
 
 }

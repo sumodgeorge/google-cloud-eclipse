@@ -40,17 +40,18 @@ import org.eclipse.ui.IWorkbench;
 public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
   private static final Logger logger = Logger.getLogger(CloudSdkUpdateNotification.class.getName());
 
-  /*
-   * Unfortunately {@link AbstractNotificationPopup} makes it
-   * impossible to determine whether the popup faded away, which we take as implied consent, or if the
-   * user clicked on the notification-close button (the {@code X} in the upper right) — equivalent to
-   * keying {@code ESC} or closing the window which is CANCEL. Fading away triggers {@link
-   * Shell#close()}, the same code path as keying {@code ESC}. Clicking the notification-close button
-   * first calls {@link #close()} and <em>then</em>calls {@code setReturnCode(CANCEL)}.
+  /**
+   * Unfortunately we can't use {@link #getReturnCode()}'s {@code OK}/{@code CANCEL} as {@link
+   * AbstractNotificationPopup} doesn't set it consistently. Keying {@code ESC} or closing the
+   * window triggers a Shell Close event, which results in CANCEL. Fading away triggers {@link
+   * Shell#close()}, the same code path as keying {@code ESC}. Clicking the notification-close
+   * button first calls {@link #close()} and <em>then</em>calls {@code setReturnCode(CANCEL)}.
    *
-   * <p>So we ignore the {@link #getReturnCode()} and instead maintain a separate tri-state for:
-   * INSTALL, SKIP, and UNKNOWN. If UNKNOWN, then we use the @link Shell#getAlpha()} to determine if
-   * the shell faded away (INSTALL) or otherwise the user clicked the X (SKIP).
+   * <p>So we ignore the {@link #getReturnCode()} and instead maintain a tri-state for: INSTALL,
+   * SKIP, and UNKNOWN. If UNKNOWN, then we could use the {@link Shell#getAlpha()} to differentiate
+   * between the shell fading away or otherwise the user clicked the X.
+   *
+   * @see #close()
    */
   private enum UpdateDirective {
     INSTALL,
@@ -83,12 +84,11 @@ public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
 
   @VisibleForTesting
   CloudSdkUpdateNotification(
-      IWorkbench wb, CloudSdkVersion currentVersion, Runnable triggerUpdate) {
-    super(wb.getDisplay());
-    setBlockOnOpen(false);
-    workbench = wb;
-    sdkVersion = currentVersion;
-    updateRunnable = triggerUpdate;
+      IWorkbench workbench, CloudSdkVersion sdkVersion, Runnable updateRunnable) {
+    super(workbench.getDisplay());
+    this.workbench = workbench;
+    this.sdkVersion = sdkVersion;
+    this.updateRunnable = updateRunnable;
   }
 
   @Override
@@ -135,18 +135,15 @@ public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
 
   @Override
   public boolean close() {
-    if (shouldInstallUpdate(updateDirective, getShell())) {
+    /*
+     * We considered treating faded-away (by comparing shell alpha == 0) as
+     * distinct from the user keying ESC or using notification-close button.
+     * ESC/X usually means "no" for dialogs, but this notification is not a
+     * dialog.  So if the user has not chosen "skip" then we proceed.
+     */
+    if (updateDirective != UpdateDirective.SKIP) {
       updateRunnable.run();
     }
     return super.close();
-  }
-
-  @VisibleForTesting
-  static boolean shouldInstallUpdate(UpdateDirective directive, Shell shell) {
-    if (directive == UpdateDirective.UNKNOWN) {
-      // check if the shell faded away
-      return shell != null && !shell.isDisposed() && shell.getAlpha() == 0;
-    }
-    return directive == UpdateDirective.INSTALL;
   }
 }
