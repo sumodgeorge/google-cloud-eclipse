@@ -19,22 +19,31 @@ package com.google.cloud.tools.eclipse.sdk.ui;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.appengine.cloudsdk.serialization.CloudSdkVersion;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbench;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CloudSdkUpdateNotificationTest {
+  @Mock private IWorkbench workbench;
+
+  @Before
+  public void setUp() {
+    when(workbench.getDisplay()).thenReturn(Display.getCurrent());
+  }
 
   @Test
   public void testTriggeredOnUpdateLink() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
-        new CloudSdkUpdateNotification(
-            PlatformUI.getWorkbench(), new CloudSdkVersion("178.0.0"), trigger);
+        new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
     notification.linkSelected("install");
     verify(trigger).run();
   }
@@ -43,8 +52,7 @@ public class CloudSdkUpdateNotificationTest {
   public void testTriggeredOnFade() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
-        new CloudSdkUpdateNotification(
-            PlatformUI.getWorkbench(), new CloudSdkVersion("178.0.0"), trigger);
+        new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
     // simulate fade away
     notification.open();
     notification.getShell().setAlpha(0);
@@ -56,8 +64,7 @@ public class CloudSdkUpdateNotificationTest {
   public void testNotTriggeredOnCancelLink() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
-        new CloudSdkUpdateNotification(
-            PlatformUI.getWorkbench(), new CloudSdkVersion("178.0.0"), trigger);
+        new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
     notification.linkSelected("cancel");
     verify(trigger, never()).run();
   }
@@ -66,8 +73,7 @@ public class CloudSdkUpdateNotificationTest {
   public void testNoTriggerOnCloseButton() {
     Runnable trigger = mock(Runnable.class);
     CloudSdkUpdateNotification notification =
-        new CloudSdkUpdateNotification(
-            PlatformUI.getWorkbench(), new CloudSdkVersion("178.0.0"), trigger);
+        new CloudSdkUpdateNotification(workbench, new CloudSdkVersion("178.0.0"), trigger);
     notification.open();
     notification.close();
     verify(trigger, never()).run();
