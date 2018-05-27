@@ -84,14 +84,14 @@
          id="org.eclipse.jetty.server"
          download-size="0"
          install-size="0"
-         version="9.2.24.v20180105"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jetty.util"
          download-size="0"
          install-size="0"
-         version="9.2.24.v20180105"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
