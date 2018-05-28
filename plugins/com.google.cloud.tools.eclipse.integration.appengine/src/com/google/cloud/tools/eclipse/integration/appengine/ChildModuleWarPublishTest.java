@@ -45,8 +45,7 @@ import org.junit.runner.RunWith;
 @RunWith(SWTBotJunit4ClassRunner.class)
 public abstract class ChildModuleWarPublishTest {
 
-  @Rule
-  public ThreadDumpingWatchdog timer = new ThreadDumpingWatchdog(2, TimeUnit.MINUTES);
+  @Rule public ThreadDumpingWatchdog timer = new ThreadDumpingWatchdog(2, TimeUnit.MINUTES);
 
   private static final IProgressMonitor monitor = new NullProgressMonitor();
   private static Map<String, IProject> allProjects;
@@ -64,10 +63,11 @@ public abstract class ChildModuleWarPublishTest {
 
   @AfterClass
   public static void tearDown() {
-    ProjectUtils.waitForProjects(allProjects.values());
-    for (IProject project : allProjects.values()) {
+    IProject[] projects = allProjects.values().toArray(new IProject[0]);
+    ProjectUtils.waitForProjects(projects);
+    if (projects.length > 0) {
       try {
-        project.delete(true, null);
+        projects[0].getWorkspace().delete(projects, true, null);
       } catch (CoreException | RuntimeException ex) {
         Logger.getLogger(ChildModuleWarPublishTest.class.getName()).log(Level.WARNING,
             ex.getMessage(), ex);
