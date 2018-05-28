@@ -58,6 +58,20 @@ public abstract class BaseProjectTest {
 
   @After
   public void tearDown() {
+    {
+      logger.info("{{{ " + this.getClass().getSimpleName() + ".tearDown(): " + project + " }}}");
+      String fileName =
+          SWTBotPreferences.SCREENSHOTS_DIR
+              + "/"
+              + "teardown-"
+              + this.getClass().getSimpleName()
+              + "."
+              + System.currentTimeMillis()
+              + "."
+              + SWTBotPreferences.SCREENSHOT_FORMAT.toLowerCase();
+      SWTUtils.captureScreenshot(fileName);
+      logger.log(Level.INFO, "Screenshot saved as " + fileName);
+    }
     if (project != null) {
       // close editors, so no property changes are dispatched on delete
       bot.closeAllEditors();
