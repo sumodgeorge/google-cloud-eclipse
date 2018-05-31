@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.internal.ui.viewsupport.ImageDisposer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -44,6 +43,7 @@ class LabelImageLoadJob extends Job {
     display = label.getDisplay();  // Save display early while "label" is alive.
   }
 
+  @SuppressWarnings("deprecation") // ImageDescriptor#getImageData(int) introduced in 4.7/Oxygen
   @Override
   protected IStatus run(IProgressMonitor monitor) {
     ImageDescriptor descriptor = ImageDescriptor.createFromURL(imageUrl);
@@ -61,7 +61,7 @@ class LabelImageLoadJob extends Job {
     public void run() {
       if (!label.isDisposed()) {
         Image image = new Image(label.getDisplay(), imageData);
-        label.addDisposeListener(new ImageDisposer(image));
+        label.addDisposeListener(event -> image.dispose());
         label.setImage(image);
       }
     }
