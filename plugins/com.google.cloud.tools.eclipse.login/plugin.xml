@@ -10,7 +10,7 @@
       <command
             categoryId="com.google.cloud.tools.eclipse.ui.commands"
             id="com.google.cloud.tools.eclipse.login.commands.loginCommand"
-            name="Google Login Command">
+            name="%googleLoginName">
       </command>
    </extension>
    <extension
@@ -27,7 +27,7 @@
          <command
                commandId="com.google.cloud.tools.eclipse.login.commands.loginCommand"
                id="com.google.cloud.tools.eclipse.login.menus.loginCommand"
-               mnemonic="G">
+               mnemonic="%googleLoginMnemonic">
          </command>
       </menuContribution>
       <menuContribution
