@@ -22,8 +22,14 @@ import static org.junit.Assert.assertTrue;
 import com.google.cloud.tools.eclipse.appengine.deploy.StagingDelegate;
 import com.google.cloud.tools.eclipse.appengine.facets.AppEngineFlexWarFacet;
 import com.google.cloud.tools.eclipse.test.util.project.TestProjectCreator;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
@@ -55,12 +61,42 @@ public class FlexWarStagingDelegateTest {
   @Test
   public void testStage() {
     StagingDelegate delegate = new FlexWarStagingDelegate(project, appEngineDirectory);
+    System.out.println(">>> Before stage()");
+    System.out.println("Contents of stagingDirectory=" + stagingDirectory);
+    listFiles(stagingDirectory);
+    System.out.println("Contents of safeWorkDirectory=" + safeWorkDirectory);
+    listFiles(safeWorkDirectory);
+
+    System.out.println(">>> Calling stage()");
     IStatus status = delegate.stage(stagingDirectory, safeWorkDirectory,
         null, null, new NullProgressMonitor());
+    System.out.println(">>> After stage()");
+    System.out.println("Contents of stagingDirectory=" + stagingDirectory);
+    listFiles(stagingDirectory);
+    System.out.println("Contents of safeWorkDirectory=" + safeWorkDirectory);
+    listFiles(safeWorkDirectory);
 
     assertTrue(getStatusAsString(status), status.isOK());
     assertTrue(stagingDirectory.append("app-to-deploy.war").toFile().exists());
     assertTrue(stagingDirectory.append("app.yaml").toFile().exists());
+  }
+
+  private static void listFiles(IPath location) {
+    Path path = location.toFile().toPath();
+    try {
+      Files.walkFileTree(
+          path,
+          new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              System.out.println("   " + path.relativize(file));
+              return FileVisitResult.CONTINUE;
+            }
+          });
+    } catch (IOException ex) {
+      System.err.println("Error while listing files in " + path + ": " + ex);
+    }
   }
 
   private static String getStatusAsString(IStatus status) {
