@@ -27,16 +27,17 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
 import org.eclipse.swtbot.swt.finder.exceptions.WidgetNotFoundException;
+import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
 import org.eclipse.swtbot.swt.finder.utils.SWTBotPreferences;
 import org.eclipse.swtbot.swt.finder.utils.SWTUtils;
 import org.eclipse.swtbot.swt.finder.widgets.TimeoutException;
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
-/**
- * Common infrastructure for workbench-based tests that create a single project.
- */
-public class BaseProjectTest {
+/** Common infrastructure for workbench-based tests that create a single project. */
+@RunWith(SWTBotJunit4ClassRunner.class)
+public abstract class BaseProjectTest {
   private static final Logger logger = Logger.getLogger(BaseProjectTest.class.getName());
 
   protected static SWTWorkbenchBot bot;
@@ -58,8 +59,13 @@ public class BaseProjectTest {
   @After
   public void tearDown() {
     if (project != null) {
+      // Collapse projects to avoid "No IModelProvider exists for project" errors
+      // https://bugs.eclipse.org/bugs/show_bug.cgi?id=511541
+      SwtBotProjectActions.collapseProjects(bot);
+
       // close editors, so no property changes are dispatched on delete
       bot.closeAllEditors();
+      
       // ensure there are no jobs
       SwtBotWorkbenchActions.waitForProjects(bot, project);
 

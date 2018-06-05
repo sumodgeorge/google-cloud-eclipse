@@ -100,12 +100,12 @@ public class CloudLibrariesPageTest {
   }
 
   @Test
-  public void testAppEngineLibraries_foundOnAppEngineProject() {
+  public void testAppEngineLibraries_foundOnAppEngineStandardProject() {
     IJavaProject javaProject = plainJavaProjectCreator
         .withFacets(WebFacetUtils.WEB_25, AppEngineStandardFacet.JRE7).getJavaProject();
     page.initialize(javaProject, null);
     page.createControl(shellTestResource.getShell());
-    assertThat(page.libraryGroups, Matchers.hasKey(CloudLibraries.APP_ENGINE_GROUP));
+    assertThat(page.libraryGroups, Matchers.hasKey(CloudLibraries.APP_ENGINE_STANDARD_GROUP));
   }
 
   @Test
@@ -113,7 +113,8 @@ public class CloudLibrariesPageTest {
     IJavaProject javaProject = plainJavaProjectCreator.getJavaProject();
     page.initialize(javaProject, null);
     page.createControl(shellTestResource.getShell());
-    assertThat(page.libraryGroups, Matchers.not(Matchers.hasKey(CloudLibraries.APP_ENGINE_GROUP)));
+    assertThat(page.libraryGroups, 
+        Matchers.not(Matchers.hasKey(CloudLibraries.APP_ENGINE_STANDARD_GROUP)));
   }
 
   @Test
@@ -121,7 +122,7 @@ public class CloudLibrariesPageTest {
     // explicitly configure App Engine and GCP libraries
     IJavaProject javaProject = plainJavaProjectCreator.getJavaProject();
     LinkedHashMap<String, String> groups = new LinkedHashMap<>();
-    groups.put(CloudLibraries.APP_ENGINE_GROUP, CloudLibraries.APP_ENGINE_GROUP);
+    groups.put(CloudLibraries.APP_ENGINE_STANDARD_GROUP, CloudLibraries.APP_ENGINE_STANDARD_GROUP);
     groups.put(CloudLibraries.CLIENT_APIS_GROUP, CloudLibraries.CLIENT_APIS_GROUP);
 
     // select objectify
@@ -153,6 +154,7 @@ public class CloudLibrariesPageTest {
 
     returnedLibraries = page.getSelectedLibraries();
     Assert.assertEquals(3, returnedLibraries.size());
+    assertThat(returnedLibraries, Matchers.hasItem(new LibraryMatcher("appengine-api")));
     assertThat(returnedLibraries, Matchers.hasItem(new LibraryMatcher("objectify")));
     assertThat(returnedLibraries, Matchers.hasItem(new LibraryMatcher("googlecloudstorage")));
 

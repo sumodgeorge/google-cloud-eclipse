@@ -45,7 +45,7 @@ public class CloudLibrariesTest {
       Assert.assertNotNull(library.getName() + " has no tooltip", tooltip);
       Assert.assertFalse(tooltip.isEmpty());
       Assert.assertFalse(library.getName() + " has no files", library.getAllDependencies().isEmpty());
-      Assert.assertEquals("clientapis", library.getGroup());
+      Assert.assertEquals("clientapis", library.getGroups().get(0));
     }
   }
   
@@ -70,7 +70,14 @@ public class CloudLibrariesTest {
   @Test
   public void testGetLibrary() {
     Library library = CloudLibraries.getLibrary("objectify");
-    Assert.assertEquals("appengine", library.getGroup());
+    Assert.assertEquals("appengine", library.getGroups().get(0));
+    Assert.assertEquals("Objectify", library.getName());
+  }
+  
+  @Test
+  public void testGetLibraryObjectify6() {
+    Library library = CloudLibraries.getLibrary("objectify6");
+    Assert.assertEquals("flexible", library.getGroups().get(0));
     Assert.assertEquals("Objectify", library.getName());
   }
 }
