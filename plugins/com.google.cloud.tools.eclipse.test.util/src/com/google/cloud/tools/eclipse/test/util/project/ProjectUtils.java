@@ -48,6 +48,7 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -139,6 +140,7 @@ public class ProjectUtils {
       project.open(progress.newChild(8));
       projects.put(project.getName(), project);
     }
+    root.getWorkspace().build(IncrementalProjectBuilder.CLEAN_BUILD, progress.split(8));
 
     // wait for any post-import operations too
     waitForProjects(projects.values());
