@@ -19,6 +19,7 @@ package com.google.cloud.tools.eclipse.sdk.ui;
 import com.google.cloud.tools.appengine.cloudsdk.serialization.CloudSdkVersion;
 import com.google.cloud.tools.eclipse.ui.util.WorkbenchUtil;
 import com.google.cloud.tools.eclipse.ui.util.images.SharedImages;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.core.runtime.IStatus;
@@ -27,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.IWorkbench;
@@ -35,7 +37,11 @@ import org.eclipse.ui.IWorkbench;
 public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
   private static final Logger logger = Logger.getLogger(CloudSdkUpdateNotification.class.getName());
 
-  /** Show a notification that an update is available. */
+  /**
+   * Asynchronously shows a notification that an update is available.
+   *
+   * @param updateTrigger the action to take when selected; assumed to be short-lived
+   */
   public static void showNotification(
       IWorkbench workbench, CloudSdkVersion currentVersion, Runnable updateTrigger) {
     workbench
@@ -44,7 +50,7 @@ public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
             () -> {
               CloudSdkUpdateNotification popup =
                   new CloudSdkUpdateNotification(workbench, currentVersion, updateTrigger);
-              popup.open();
+              popup.open(); // doesn't wait
             });
   }
 
@@ -52,12 +58,13 @@ public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
   private CloudSdkVersion sdkVersion;
   private Runnable updateRunnable;
 
-  private CloudSdkUpdateNotification(
-      IWorkbench wb, CloudSdkVersion currentVersion, Runnable triggerUpdate) {
-    super(wb.getDisplay());
-    workbench = wb;
-    sdkVersion = currentVersion;
-    updateRunnable = triggerUpdate;
+  @VisibleForTesting
+  CloudSdkUpdateNotification(
+      IWorkbench workbench, CloudSdkVersion sdkVersion, Runnable updateRunnable) {
+    super(workbench.getDisplay());
+    this.workbench = workbench;
+    this.sdkVersion = sdkVersion;
+    this.updateRunnable = updateRunnable;
   }
 
   @Override
@@ -74,21 +81,27 @@ public class CloudSdkUpdateNotification extends AbstractNotificationPopup {
   protected void createContentArea(Composite parent) {
     Link message = new Link(parent, SWT.WRAP);
     message.setText(Messages.getString("CloudSdkUpdateNotificationMessage", sdkVersion));
+    message.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
     message.addSelectionListener(
         new SelectionAdapter() {
           @Override
           public void widgetSelected(SelectionEvent event) {
-            if ("update".equals(event.text)) {
-              updateRunnable.run();
-            } else if (event.text != null && event.text.startsWith("http")) {
-              IStatus status = WorkbenchUtil.openInBrowser(workbench, event.text);
-              if (!status.isOK()) {
-                logger.log(Level.SEVERE, status.getMessage(), status.getException());
-              }
-            } else {
-              logger.warning("Unknown selection event: " + event.text);
-            }
+            linkSelected(event.text);
           }
         });
+  }
+
+  @VisibleForTesting
+  void linkSelected(String linkText) {
+    if ("update".equals(linkText)) {
+      updateRunnable.run();
+    } else if (linkText != null && linkText.startsWith("http")) {
+      IStatus status = WorkbenchUtil.openInBrowser(workbench, linkText);
+      if (!status.isOK()) {
+        logger.log(Level.SEVERE, status.getMessage(), status.getException());
+      }
+    } else {
+      logger.warning("Unknown selection event: " + linkText);
+    }
   }
 }
