@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.maven.artifact.Artifact;
 import org.eclipse.core.runtime.CoreException;
@@ -158,6 +159,7 @@ public class LibraryClasspathContainerResolverService
       } else {
         library = CloudLibraries.getLibrary(libraryId);
       }
+
       if (library != null) {
         List<Job> sourceAttacherJobs = new ArrayList<>();
         LibraryClasspathContainer container =
@@ -175,6 +177,7 @@ public class LibraryClasspathContainerResolverService
       }
       return Status.OK_STATUS;
     } catch (CoreException | IOException ex) {
+      logger.log(Level.SEVERE, "Could not resolve container: " + containerPath, ex);
       return StatusUtil.error(
           this, Messages.getString("TaskResolveContainerError", containerPath), ex);
     }
