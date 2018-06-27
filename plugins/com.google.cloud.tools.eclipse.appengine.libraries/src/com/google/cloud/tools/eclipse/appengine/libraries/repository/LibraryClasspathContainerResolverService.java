@@ -170,7 +170,13 @@ public class LibraryClasspathContainerResolverService
             new IJavaProject[] {javaProject},
             new IClasspathContainer[] {container},
             subMonitor.newChild(1));
-        serializer.saveContainer(javaProject, container);
+        if (!javaProject.getProject().getWorkspace().isTreeLocked()) {
+          // The classpath container update may have been triggered as part of a resource change
+          // in which case the workspace is locked and so we cannot serialize out our
+          // container cache.  There will be other opportunities.
+          // https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues/3181
+          serializer.saveContainer(javaProject, container);
+        }
         for (Job job : sourceAttacherJobs) {
           job.schedule();
         }
