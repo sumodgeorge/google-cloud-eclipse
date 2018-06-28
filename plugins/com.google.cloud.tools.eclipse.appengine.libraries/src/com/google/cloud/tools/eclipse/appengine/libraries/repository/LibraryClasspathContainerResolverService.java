@@ -176,9 +176,9 @@ public class LibraryClasspathContainerResolverService
           // container cache.  There will be other opportunities.
           // https://github.com/GoogleCloudPlatform/google-cloud-eclipse/issues/3181
           serializer.saveContainer(javaProject, container);
-        }
-        for (Job job : sourceAttacherJobs) {
-          job.schedule();
+          for (Job job : sourceAttacherJobs) {
+            job.schedule();
+          }
         }
       }
       return Status.OK_STATUS;
