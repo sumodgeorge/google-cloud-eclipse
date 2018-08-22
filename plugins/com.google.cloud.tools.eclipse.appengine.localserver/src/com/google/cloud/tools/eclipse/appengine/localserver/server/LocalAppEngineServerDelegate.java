@@ -43,6 +43,20 @@ import org.eclipse.wst.server.core.internal.facets.FacetUtil;
 import org.eclipse.wst.server.core.model.IURLProvider;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
+/**
+ * The WTP delegate class for our devappserver server binding.
+ *
+ * <p>This class works closely with the {@link LocalAppEngineServerBehaviour} and {@link
+ * LocalAppEngineServerLaunchConfigurationDelegate}. The division of labour is:
+ *
+ * <ul>
+ *   <li>ServerDelegate: handles bookkeeping and validation of user-driven configuration changes for
+ *       a server definition.
+ *   <li>ServerBehaviour: handles the mechanics of starting and stopping a server.
+ *   <li>LaunchConfigurationDelegate: handles the mechanics of launching a server with the
+ *       Platform/Debug launching framework.
+ * </ul>
+ */
 @SuppressWarnings("restriction") // For FacetUtil
 public class LocalAppEngineServerDelegate extends ServerDelegate implements IURLProvider {
   private static final Logger logger =
