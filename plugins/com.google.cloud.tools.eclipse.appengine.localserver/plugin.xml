@@ -193,13 +193,6 @@
          </runtime-component>
       </default-facets>
    </extension>
-   <extension
-         point="org.eclipse.debug.core.processFactories">
-      <processFactory
-            class="com.google.cloud.tools.eclipse.appengine.localserver.server.DevAppServerProcessFactory"
-            id="com.google.cloud.tools.eclipse.appengine.localserver.processfactory">
-      </processFactory>
-   </extension>
 
    <extension
          point="org.eclipse.core.runtime.preferences">
