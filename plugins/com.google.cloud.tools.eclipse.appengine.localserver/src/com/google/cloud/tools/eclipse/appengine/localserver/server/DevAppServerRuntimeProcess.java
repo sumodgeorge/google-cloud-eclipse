@@ -16,35 +16,101 @@
 
 package com.google.cloud.tools.eclipse.appengine.localserver.server;
 
+import com.google.cloud.tools.appengine.cloudsdk.process.ProcessOutputLineListener;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.core.runtime.PlatformObject;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.model.RuntimeProcess;
+import org.eclipse.debug.core.IStreamListener;
+import org.eclipse.debug.core.model.IProcess;
+import org.eclipse.debug.core.model.IStreamMonitor;
+import org.eclipse.debug.core.model.IStreamsProxy;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.ServerUtil;
 
-public class DevAppServerRuntimeProcess extends RuntimeProcess {
+/** A wrapper around the Cloud SDK devappserver process. */
+public class DevAppServerRuntimeProcess extends PlatformObject implements IProcess {
 
-  public DevAppServerRuntimeProcess(ILaunch launch,
-                                    Process process,
-                                    String name,
-                                    Map<String, String> attributes) {
-    super(launch, process, name, attributes);
+  private static class CloudSdkStreamMonitor implements IStreamMonitor, ProcessOutputLineListener {
+    private ListenerList<IStreamListener> listeners = new ListenerList<>();
+    private StringBuffer contents = new StringBuffer();
+
+    @Override
+    public void onOutputLine(String line) {
+      String newContent = line + "\n";
+      contents.append(newContent);
+
+      for (IStreamListener listener : listeners) {
+        listener.streamAppended(newContent, this);
+      }
+    }
+
+    @Override
+    public void addListener(IStreamListener listener) {
+      listeners.add(listener);
+    }
+
+    @Override
+    public String getContents() {
+      return contents.toString();
+    }
+
+    @Override
+    public void removeListener(IStreamListener listener) {
+      listeners.remove(listener);
+    }
+  }
+  
+  public class CloudSdkStreamsProxy implements IStreamsProxy {
+    private final CloudSdkStreamMonitor standardOutputMonitor = new CloudSdkStreamMonitor();
+    private final CloudSdkStreamMonitor standardErrorMonitor = new CloudSdkStreamMonitor();
+
+    @Override
+    public IStreamMonitor getErrorStreamMonitor() {
+      return standardErrorMonitor;
+    }
+
+    @Override
+    public IStreamMonitor getOutputStreamMonitor() {
+      return standardOutputMonitor;
+    }
+
+    @Override
+    public void write(String input) throws IOException {
+      throw new IOException("no input stream");
+    }
+  }
+
+  private final ILaunch launch;
+  private final String name;
+  private final Map<String, String> attributes;
+  private Process process;
+  private CloudSdkStreamsProxy streamsProxy = new CloudSdkStreamsProxy();
+
+  public DevAppServerRuntimeProcess(ILaunch launch, String name, Map<String, String> attributes) {
+    this.launch = launch;
+    this.name = name;
+    this.attributes = new HashMap<>(attributes);
+  }
+
+  public void setProcess(Process process) {
+    this.process = process;
   }
 
   @Override
   public void terminate() throws DebugException {
     try {
       sendQuitRequest();
-      if (!getLaunch().isTerminated()) {
-        super.terminate();
-      }
+      // if (!getLaunch().isTerminated()) {
+      // super.terminate();
+      // }
     } catch (CoreException e) {
       throw new DebugException(e.getStatus());
     }
-
   }
 
   private void sendQuitRequest() throws CoreException {
@@ -60,4 +126,51 @@ public class DevAppServerRuntimeProcess extends RuntimeProcess {
     }
   }
 
+  @Override
+  public boolean canTerminate() {
+    return true;
+  }
+
+  @Override
+  public boolean isTerminated() {
+    return !process.isAlive();
+  }
+
+  @Override
+  public String getLabel() {
+    return name;
+  }
+
+  @Override
+  public ILaunch getLaunch() {
+    return launch;
+  }
+
+  @Override
+  public IStreamsProxy getStreamsProxy() {
+    return streamsProxy;
+  }
+
+  @Override
+  public void setAttribute(String key, String value) {
+    attributes.put(key, value);
+  }
+
+  @Override
+  public String getAttribute(String key) {
+    return attributes.get(key);
+  }
+
+  @Override
+  public int getExitValue() throws DebugException {
+    return process.exitValue();
+  }
+
+  public ProcessOutputLineListener getStandardOutputLineListener() {
+    return streamsProxy.standardOutputMonitor;
+  }
+
+  public ProcessOutputLineListener getStandardErrorLineListener() {
+    return streamsProxy.standardErrorMonitor;
+  }
 }

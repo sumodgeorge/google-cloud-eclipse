@@ -25,14 +25,12 @@ import com.google.cloud.tools.appengine.cloudsdk.CloudSdkAppEngineDevServer1;
 import com.google.cloud.tools.appengine.cloudsdk.CloudSdkNotFoundException;
 import com.google.cloud.tools.appengine.cloudsdk.LocalRun;
 import com.google.cloud.tools.appengine.cloudsdk.process.LegacyProcessHandler;
-import com.google.cloud.tools.appengine.cloudsdk.process.ProcessExitListener;
 import com.google.cloud.tools.appengine.cloudsdk.process.ProcessHandler;
 import com.google.cloud.tools.appengine.cloudsdk.process.ProcessOutputLineListener;
 import com.google.cloud.tools.appengine.cloudsdk.process.ProcessStartListener;
 import com.google.cloud.tools.appengine.cloudsdk.serialization.CloudSdkVersion;
 import com.google.cloud.tools.eclipse.appengine.localserver.Activator;
 import com.google.cloud.tools.eclipse.appengine.localserver.Messages;
-import com.google.cloud.tools.eclipse.sdk.MessageConsoleWriterListener;
 import com.google.cloud.tools.eclipse.util.status.StatusUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -55,7 +53,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.internal.IModulePublishHelper;
@@ -95,9 +92,6 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
   private static final Logger logger =
       Logger.getLogger(LocalAppEngineServerBehaviour.class.getName());
 
-  private LocalAppEngineStartListener localAppEngineStartListener;
-  private LocalAppEngineExitListener localAppEngineExitListener;
-
   /** The {@link CloudSdk} instance currently in use; may be {@code null}. */
   private CloudSdk cloudSdk;
   private AppEngineDevServer devServer;
@@ -114,8 +108,6 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
   Map<String, String> moduleToUrlMap = new LinkedHashMap<>();
 
   public LocalAppEngineServerBehaviour () {
-    localAppEngineStartListener = new LocalAppEngineStartListener();
-    localAppEngineExitListener = new LocalAppEngineExitListener();
     serverOutputListener = new DevAppServerOutputListener();
   }
 
@@ -324,14 +316,19 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
     }
     return Messages.getString("cloudsdk.server.description"); //$NON-NLS-1$
   }
-
+  
   /**
    * Starts the development server.
    *
    * @param mode the launch mode (see ILaunchManager.*_MODE constants)
    */
-  void startDevServer(String mode, DefaultRunConfiguration devServerRunConfiguration,
-      Path javaHomePath, MessageConsoleStream outputStream, MessageConsoleStream errorStream)
+  void startDevServer(
+      String mode,
+      DefaultRunConfiguration devServerRunConfiguration,
+      Path javaHomePath,
+      ProcessStartListener processStartListener,
+      ProcessOutputLineListener stdoutListener,
+      ProcessOutputLineListener stderrListener)
       throws CoreException, CloudSdkNotFoundException {
 
     BiPredicate<InetAddress, Integer> portInUse = (addr, port) -> {
@@ -345,7 +342,7 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
     setMode(mode);
 
     // Create dev app server instance
-    initializeDevServer(outputStream, errorStream, javaHomePath);
+    initializeDevServer(javaHomePath, processStartListener, stdoutListener, stderrListener);
 
     // Run server
     try {
@@ -360,23 +357,40 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
     return value != null ? value : defaultValue;
   }
 
-  private void initializeDevServer(MessageConsoleStream stdout, MessageConsoleStream stderr,
-      Path javaHomePath) throws CloudSdkNotFoundException {
-    MessageConsoleWriterListener stdoutListener = new MessageConsoleWriterListener(stdout);
-    MessageConsoleWriterListener stderrListener = new MessageConsoleWriterListener(stderr);
+  private void initializeDevServer(
+      Path javaHomePath,
+      ProcessStartListener processStartListener,
+      ProcessOutputLineListener stdoutListener,
+      ProcessOutputLineListener stderrListener)
+      throws CloudSdkNotFoundException {
 
     // dev_appserver output goes to stderr
     cloudSdk = new CloudSdk.Builder()
         .javaHome(javaHomePath)
         .build();
 
-    ProcessHandler processHandler = LegacyProcessHandler.builder()
-        .addStdOutLineListener(stdoutListener).addStdErrLineListener(stderrListener)
-        .addStdErrLineListener(serverOutputListener)
-        .setStartListener(localAppEngineStartListener)
-        .setExitListener(localAppEngineExitListener)
-        .async(true)
-        .build();
+    ProcessHandler processHandler =
+        LegacyProcessHandler.builder()
+            .addStdOutLineListener(stdoutListener)
+            .addStdErrLineListener(stderrListener)
+            .addStdErrLineListener(serverOutputListener)
+            .setStartListener(
+                process -> {
+                  logger.log(Level.FINE, "New Process: " + process); // $NON-NLS-1$
+                  devProcess = process;
+                  if (processStartListener != null) {
+                    processStartListener.onStart(devProcess);
+                  }
+                })
+            .setExitListener(
+                exitCode -> {
+                  logger.log(Level.FINE, "Process exit: code=" + exitCode); // $NON-NLS-1$
+                  devServer = null;
+                  devProcess = null;
+                  setServerState(IServer.STATE_STOPPED);
+                })
+            .async(true)
+            .build();
 
     LocalRun localRun = LocalRun.builder(cloudSdk).build();
     devServer = LocalAppEngineServerLaunchConfigurationDelegate.DEV_APPSERVER2
@@ -390,30 +404,6 @@ public class LocalAppEngineServerBehaviour extends ServerBehaviourDelegate
    */
   private boolean isDevAppServer1() {
     return devServer instanceof CloudSdkAppEngineDevServer1;
-  }
-
-  /**
-   * A {@link ProcessExitListener} for the App Engine server.
-   */
-  private class LocalAppEngineExitListener implements ProcessExitListener {
-    @Override
-    public void onExit(int exitCode) {
-      logger.log(Level.FINE, "Process exit: code=" + exitCode); //$NON-NLS-1$
-      devServer = null;
-      devProcess = null;
-      setServerState(IServer.STATE_STOPPED);
-    }
-  }
-
-  /**
-   * A {@link ProcessStartListener} for the App Engine server.
-   */
-  private class LocalAppEngineStartListener implements ProcessStartListener {
-    @Override
-    public void onStart(Process process) {
-      logger.log(Level.FINE, "New Process: " + process); //$NON-NLS-1$
-      devProcess = process;
-    }
   }
 
   /**

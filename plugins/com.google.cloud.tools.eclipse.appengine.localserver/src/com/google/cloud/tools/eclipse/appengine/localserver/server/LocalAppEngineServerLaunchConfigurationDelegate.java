@@ -27,12 +27,11 @@ import com.google.cloud.tools.appengine.cloudsdk.InvalidJavaSdkException;
 import com.google.cloud.tools.eclipse.appengine.localserver.Activator;
 import com.google.cloud.tools.eclipse.appengine.localserver.Messages;
 import com.google.cloud.tools.eclipse.appengine.localserver.PreferencesInitializer;
+import com.google.cloud.tools.eclipse.appengine.localserver.launching.CloudSdkDebugTarget;
 import com.google.cloud.tools.eclipse.appengine.localserver.ui.DatastoreIndexesUpdatedStatusHandler;
-import com.google.cloud.tools.eclipse.appengine.localserver.ui.LocalAppEngineConsole;
 import com.google.cloud.tools.eclipse.appengine.localserver.ui.StaleResourcesStatusHandler;
 import com.google.cloud.tools.eclipse.sdk.CloudSdkManager;
 import com.google.cloud.tools.eclipse.sdk.internal.CloudSdkPreferences;
-import com.google.cloud.tools.eclipse.ui.util.MessageConsoleUtilities;
 import com.google.cloud.tools.eclipse.ui.util.WorkbenchUtil;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsEvents;
 import com.google.cloud.tools.eclipse.usagetracker.AnalyticsPingManager;
@@ -56,7 +55,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -70,25 +68,13 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.VariablesPlugin;
-import org.eclipse.debug.core.DebugEvent;
-import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.core.ILaunchesListener2;
 import org.eclipse.debug.core.IStatusHandler;
-import org.eclipse.debug.core.model.DebugElement;
-import org.eclipse.debug.core.model.IBreakpoint;
-import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.debug.core.model.IMemoryBlock;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.model.IThread;
-import org.eclipse.debug.internal.ui.DebugUIPlugin;
-import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
-import org.eclipse.debug.ui.IDebugUIConstants;
-import org.eclipse.debug.ui.console.ConsoleColorProvider;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
@@ -97,18 +83,10 @@ import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.SocketUtil;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.IConsoleManager;
-import org.eclipse.ui.console.IOConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.IServerListener;
 import org.eclipse.wst.server.core.ServerCore;
-import org.eclipse.wst.server.core.ServerEvent;
 import org.eclipse.wst.server.core.ServerUtil;
 
 public class LocalAppEngineServerLaunchConfigurationDelegate
@@ -261,8 +239,8 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
    * attributes} and {@link IServer server settings and attributes}.
    */
   @VisibleForTesting
-  DefaultRunConfiguration generateServerRunConfiguration(ILaunchConfiguration configuration,
-      IServer server, String mode) throws CoreException {
+  DefaultRunConfiguration generateServerRunConfiguration(
+      ILaunchConfiguration configuration, IServer server, String mode) throws CoreException {
 
     DefaultRunConfiguration devServerRunConfiguration = new DefaultRunConfiguration();
     // Iterate through our different configurable parameters
@@ -480,23 +458,8 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
       runnables.add(deployPath.toFile());
     }
 
-    // configure the console for output
-    IPreferenceStore store = DebugUIPlugin.getDefault().getPreferenceStore();
-    ConsoleColorProvider colorProvider = new ConsoleColorProvider();
-    LocalAppEngineConsole console = MessageConsoleUtilities.findOrCreateConsole(
-        configuration.getName(), new LocalAppEngineConsole.Factory(serverBehaviour));
-    console.clearConsole();
-    console.activate();
-    MessageConsoleStream outputStream = console.newMessageStream();
-    outputStream.setColor(colorProvider.getColor(IDebugUIConstants.ID_STANDARD_OUTPUT_STREAM));
-    outputStream
-        .setActivateOnWrite(store.getBoolean(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT));
-    MessageConsoleStream errorStream = console.newMessageStream();
-    errorStream.setColor(colorProvider.getColor(IDebugUIConstants.ID_STANDARD_ERROR_STREAM));
-    errorStream.setActivateOnWrite(store.getBoolean(IDebugPreferenceConstants.CONSOLE_OPEN_ON_ERR));
-
     // A launch must have at least one debug target or process, or it becomes a zombie
-    CloudSdkDebugTarget target = new CloudSdkDebugTarget(launch, serverBehaviour, console);
+    CloudSdkDebugTarget target = new CloudSdkDebugTarget(launch, serverBehaviour);
     launch.addDebugTarget(target);
     target.engage();
 
@@ -504,17 +467,38 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
       DefaultRunConfiguration devServerRunConfiguration =
           generateServerRunConfiguration(configuration, server, mode);
       devServerRunConfiguration.setServices(runnables);
+
       if (ILaunchManager.DEBUG_MODE.equals(mode)) {
         int debugPort = getDebugPort();
-        setupDebugTarget(devServerRunConfiguration, launch, debugPort, monitor);
+        setupDebugConnection(devServerRunConfiguration, launch, debugPort, monitor);
       }
+
+      new ServerLifecycleListener()
+          .whenStarted(event -> openBrowserPage(server))
+          .whenStopped(event -> checkUpdatedDatastoreIndex(configuration, server))
+          .install(server);
 
       IJavaProject javaProject = JavaCore.create(modules[0].getProject());
       IVMInstall vmInstall = JavaRuntime.getVMInstall(javaProject);
 
+      // todo: obtain command line for IProcess.ATTR_CMDLINE attribute
+      DevAppServerRuntimeProcess devAppServerProcess =
+          new DevAppServerRuntimeProcess(
+              launch,
+              "App Engine Development Application Server",
+              Collections.singletonMap(IProcess.ATTR_PROCESS_TYPE, "java"));
       Path javaHome = vmInstall.getInstallLocation().toPath();
-      serverBehaviour.startDevServer(mode, devServerRunConfiguration, javaHome,
-          outputStream, errorStream);
+      serverBehaviour.startDevServer(
+          mode,
+          devServerRunConfiguration,
+          javaHome,
+          process -> {
+            devAppServerProcess.setProcess(process);
+            target.setProcess(devAppServerProcess);
+            launch.addProcess(devAppServerProcess);
+          },
+          devAppServerProcess.getStandardOutputLineListener(),
+          devAppServerProcess.getStandardErrorLineListener());
     } catch (CoreException ex) {
       launch.terminate();
       throw ex;
@@ -550,7 +534,27 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
         server.getName());
   }
 
-  private void setupDebugTarget(DefaultRunConfiguration devServerRunConfiguration, ILaunch launch,
+  /** Check for an updated {@code datastore-index-auto.xml} in the {@code default} module. */
+  private void checkUpdatedDatastoreIndex(ILaunchConfiguration configuration, IServer server) {
+    DatastoreIndexUpdateData update = DatastoreIndexUpdateData.detect(configuration, server);
+    if (update == null) {
+      return;
+    }
+    logger.fine("datastore-indexes-auto.xml found " + update.datastoreIndexesAutoXml);
+
+    // punts to UI thread
+    IStatusHandler prompter = DebugPlugin.getDefault().getStatusHandler(promptStatus);
+    if (prompter != null) {
+      try {
+        prompter.handleStatus(
+            DatastoreIndexesUpdatedStatusHandler.DATASTORE_INDEXES_UPDATED, update);
+      } catch (CoreException ex) {
+        logger.log(Level.WARNING, "Unexpected failure", ex);
+      }
+    }
+  }
+
+  private void setupDebugConnection(DefaultRunConfiguration devServerRunConfiguration, ILaunch launch,
       int debugPort, IProgressMonitor monitor) throws CoreException {
     if (debugPort <= 0 || debugPort > 65535) {
       throw new IllegalArgumentException("Debug port is set to " + debugPort //$NON-NLS-1$
@@ -640,240 +644,4 @@ public class LocalAppEngineServerLaunchConfigurationDelegate
     return projects.toArray(new IProject[projects.size()]);
   }
 
-  /**
-   * Monitors the server and launch state. Ensures listeners are properly removed on server stop and
-   * launch termination. It is necessary in part as there may be several launches per
-   * LaunchConfigurationDelegate.
-   * <ul>
-   * <li>On server start, open a browser page</li>
-   * <li>On launch-termination, stop the server.</li>
-   * <li>On server-stop, terminate the launch</li>
-   * </ul>
-   */
-  private class CloudSdkDebugTarget extends DebugElement implements IDebugTarget {
-    private final ILaunch launch;
-    private final LocalAppEngineServerBehaviour serverBehaviour;
-    private final IServer server;
-    private final IOConsole console;
-
-    // Fire a {@link DebugEvent#TERMINATED} event when the server is stopped
-    private IServerListener serverEventsListener = new IServerListener() {
-      @Override
-      public void serverChanged(ServerEvent event) {
-        Preconditions.checkState(server == event.getServer());
-        switch (event.getState()) {
-          case IServer.STATE_STARTED:
-            openBrowserPage(server);
-            fireChangeEvent(DebugEvent.STATE);
-            return;
-
-          case IServer.STATE_STOPPED:
-            server.removeServerListener(serverEventsListener);
-            fireTerminateEvent();
-            try {
-              logger.fine("Server stopped; terminating launch"); //$NON-NLS-1$
-              launch.terminate();
-            } catch (DebugException ex) {
-              logger.log(Level.WARNING, "Unable to terminate launch", ex); //$NON-NLS-1$
-            }
-            checkUpdatedDatastoreIndex(launch.getLaunchConfiguration());
-            return;
-
-          default:
-            fireChangeEvent(DebugEvent.STATE);
-            return;
-        }
-      }
-    };
-
-    private ILaunchesListener2 launchesListener = new ILaunchesListener2() {
-      @Override
-      public void launchesTerminated(ILaunch[] launches) {
-        for (ILaunch terminated : launches) {
-          if (terminated == launch) {
-            if (server.getServerState() == IServer.STATE_STARTED) {
-              logger.fine("Launch terminated; stopping server"); //$NON-NLS-1$
-              server.stop(false);
-            }
-            return;
-          }
-        }
-      }
-
-      @Override
-      public void launchesAdded(ILaunch[] launches) {}
-
-      @Override
-      public void launchesChanged(ILaunch[] launches) {}
-
-      @Override
-      public void launchesRemoved(ILaunch[] launches) {
-        for (ILaunch removed : launches) {
-          if (removed == launch) {
-            getLaunchManager().removeLaunchListener(launchesListener);
-            removeConsole();
-          }
-        }
-      }
-    };
-
-    private CloudSdkDebugTarget(ILaunch launch, LocalAppEngineServerBehaviour serverBehaviour,
-        IOConsole console) {
-      super(null);
-      this.launch = launch;
-      this.serverBehaviour = serverBehaviour;
-      server = serverBehaviour.getServer();
-      this.console = console;
-    }
-
-    /** Check for an updated {@code datastore-index-auto.xml} in the {@code default} module. */
-    private void checkUpdatedDatastoreIndex(ILaunchConfiguration configuration) {
-      DatastoreIndexUpdateData update = DatastoreIndexUpdateData.detect(configuration, server);
-      if (update == null) {
-        return;
-      }
-      logger.fine("datastore-indexes-auto.xml found " + update.datastoreIndexesAutoXml);
-      
-      // punts to UI thread
-      IStatusHandler prompter = DebugPlugin.getDefault().getStatusHandler(promptStatus);
-      if (prompter != null) {
-        try {
-          prompter.handleStatus(DatastoreIndexesUpdatedStatusHandler.DATASTORE_INDEXES_UPDATED,
-              update);
-        } catch (CoreException ex) {
-          logger.log(Level.WARNING, "Unexpected failure", ex);
-        }
-      }
-    }
-
-    private void removeConsole() {
-      ConsolePlugin plugin = ConsolePlugin.getDefault();
-      IConsoleManager manager = plugin.getConsoleManager();
-      manager.removeConsoles(new IConsole[] {console});
-      console.destroy();
-    }
-
-    /** Add required listeners */
-    private void engage() {
-      getLaunchManager().addLaunchListener(launchesListener);
-      server.addServerListener(serverEventsListener);
-    }
-
-    @Override
-    public String getName() throws DebugException {
-      return serverBehaviour.getDescription();
-    }
-
-    /**
-     * Returns an identifier that maps to our
-     * {@link com.google.cloud.tools.eclipse.appengine.localserver.ui.CloudSdkDebugTargetPresentation
-     * presentation} via the {@code org.eclipse.debug.ui.debugModelPresentations} extension point.
-     */
-    @Override
-    public String getModelIdentifier() {
-      return "com.google.cloud.tools.eclipse.appengine.localserver.cloudSdkDebugTarget"; //$NON-NLS-1$
-    }
-
-    @Override
-    public IDebugTarget getDebugTarget() {
-      return this;
-    }
-
-    @Override
-    public ILaunch getLaunch() {
-      return launch;
-    }
-
-    @Override
-    public boolean canTerminate() {
-      return true;
-    }
-
-    @Override
-    public boolean isTerminated() {
-      int state = server.getServerState();
-      return state == IServer.STATE_STOPPED;
-    }
-
-    @Override
-    public void terminate() throws DebugException {
-      int state = server.getServerState();
-      if (state != IServer.STATE_STOPPED) {
-        serverBehaviour.stop(state == IServer.STATE_STOPPING);
-      }
-    }
-
-    @Override
-    public boolean supportsBreakpoint(IBreakpoint breakpoint) {
-      return false;
-    }
-
-    @Override
-    public void breakpointAdded(IBreakpoint breakpoint) {}
-
-    @Override
-    public void breakpointRemoved(IBreakpoint breakpoint, IMarkerDelta delta) {}
-
-    @Override
-    public void breakpointChanged(IBreakpoint breakpoint, IMarkerDelta delta) {}
-
-    @Override
-    public boolean canResume() {
-      return false;
-    }
-
-    @Override
-    public void resume() throws DebugException {}
-
-    @Override
-    public boolean canSuspend() {
-      return false;
-    }
-
-    @Override
-    public boolean isSuspended() {
-      return false;
-    }
-
-    @Override
-    public void suspend() throws DebugException {}
-
-    @Override
-    public boolean canDisconnect() {
-      return false;
-    }
-
-    @Override
-    public boolean isDisconnected() {
-      return false;
-    }
-
-    @Override
-    public void disconnect() throws DebugException {}
-
-    @Override
-    public boolean supportsStorageRetrieval() {
-      return false;
-    }
-
-    @Override
-    public IMemoryBlock getMemoryBlock(long startAddress, long length) throws DebugException {
-      return null;
-    }
-
-    @Override
-    public IProcess getProcess() {
-      return null;
-    }
-
-    @Override
-    public boolean hasThreads() throws DebugException {
-      return false;
-    }
-
-    @Override
-    public IThread[] getThreads() throws DebugException {
-      return new IThread[0];
-    }
-  }
 }
