@@ -24,13 +24,11 @@
          name="YEdit"
          optional="true"/>
          
-<!--
    <includes
          id="org.eclipse.linuxtools.docker.feature"
          version="0.0.0"
-         name="Docker Tools"
+         name="Eclipse Docker Tools"
          optional="true"/>
--->
 
    <plugin
          id="com.google.cloud.tools.appengine"
