@@ -105,9 +105,6 @@ public class DevAppServerRuntimeProcess extends PlatformObject implements IProce
   public void terminate() throws DebugException {
     try {
       sendQuitRequest();
-      // if (!getLaunch().isTerminated()) {
-      // super.terminate();
-      // }
     } catch (CoreException e) {
       throw new DebugException(e.getStatus());
     }
