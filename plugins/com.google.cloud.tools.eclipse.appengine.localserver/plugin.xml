@@ -165,7 +165,9 @@
       id="com.google.cloud.tools.eclipse.appengine.deploy.consolePatternMatchListener"
       regex="https?://([\w-]+\.?)+(:\w+)?(/[^\s]*)?">
       <enablement>
-        <instanceof value="com.google.cloud.tools.eclipse.appengine.localserver.ui.LocalAppEngineConsole"/>
+          <test
+                property="com.google.cloud.tools.eclipse.appengine.localserver.devAppServerProcessTest">
+          </test>
       </enablement>
     </consolePatternMatchListener>
    </extension>
@@ -358,5 +360,15 @@
             class="com.google.cloud.tools.eclipse.appengine.localserver.server.RegisterAppEngineStandardRuntimeStartup"
             id="com.google.cloud.tools.eclipse.appengine.localserver.startup">
       </startup>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="com.google.cloud.tools.eclipse.appengine.localserver.server.DevAppServerRuntimeProcessPropertyTester"
+            id="com.google.cloud.tools.eclipse.appengine.localserver.propertyTests"
+            namespace="com.google.cloud.tools.eclipse.appengine.localserver"
+            properties="devAppServerProcessTest"
+            type="org.eclipse.ui.console.IConsole">
+      </propertyTester>
    </extension>
 </plugin>
