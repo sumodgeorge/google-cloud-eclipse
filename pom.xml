@@ -99,7 +99,7 @@
       <!-- bundle: com.google.cloud.tools.login.plugins-login-common -->
       <groupId>com.google.cloud.tools.login</groupId>
       <artifactId>plugins-login-common</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.2</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
