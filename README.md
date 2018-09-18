@@ -30,7 +30,7 @@ Maven for building Eclipse bundles and features.
 
   1. The [M2Eclipse plugin](http://www.eclipse.org/m2e/) (also called m2e) is
      required to import the projects into Eclipse.  M2Eclipse is included in
-     [several packages](https://www.eclipse.org/downloads/compare.php?release=neon),
+     [several packages](https://www.eclipse.org/downloads/compare.php?release=photon),
      such as the _Eclipse IDE for Java EE Developers_ package.
 
   2. The [m2e connector for maven-dependency-plugin](https://github.com/ianbrandt/m2e-maven-dependency-plugin)
@@ -64,11 +64,11 @@ The tests need to find the Google Cloud SDK.  You can either:
 
 ### Changing the Eclipse Platform compilation and testing target
 
-By default, the build is targeted against Eclipse Oxygen / 4.7.
+By default, the build is targeted against Eclipse Photon / 4.8.
 You can explicitly set the `eclipse.target` property to
-`neon` (4.6).
+`oxygen` (4.7).
 ```
-$ mvn -Declipse.target=neon package
+$ mvn -Declipse.target=oxygen package
 ```
 
 ### Adding a new bundle/fragment
@@ -213,27 +213,27 @@ target platform whenever dependencies are updated.
 
   1. Set variables required for launch:
 
-    1. Go to the second tab for `Arguments`
+      1. Go to the second tab for `Arguments`
 
-    1. Click the `Variables...` button for `VM argument:`
+      1. Click the `Variables...` button for `VM argument:`
 
-    1. Click the `Edit variables...` button
+      1. Click the `Edit variables...` button
 
-    1. Click `New...`
+      1. Click `New...`
 
-    1. Set the name to `oauth_id`, and the value to the value you want to use
+      1. Set the name to `oauth_id`, and the value to the value you want to use
     (description optional)
 
-    1. Click `OK`, the variable will appear in the list
+      1. Click `OK`, the variable will appear in the list
 
-    1. Repeat steps 6-8 but use `oauth_secret` as the name and use the
+      1. Repeat steps 6-8 but use `oauth_secret` as the name and use the
     corresponding value
 
-    1. Click `OK` to close the edit variables dialog
+      1. Click `OK` to close the edit variables dialog
 
-    1. Click `Cancel` to close the variable selection dialog
+      1. Click `Cancel` to close the variable selection dialog
 
-    1. Click `Apply` to apply the changes to the run config
+      1. Click `Apply` to apply the changes to the run config
 
   1. From the `Run` menu, select `Run History > gcloud-eclipse-tools`
 
@@ -250,7 +250,6 @@ features being built against. We currently maintain three target platforms,
 targeting the latest version of the current, previous, and next releases.
 This is currently:
 
-  - Eclipse Neon (4.6): [`eclipse/neon/gcp-eclipse-neon.target`](eclipse/neon/gcp-eclipse-neon.target)
   - Eclipse Oxygen (4.7): [`eclipse/oxygen/gcp-eclipse-oxygen.target`](eclipse/oxygen/gcp-eclipse-oxygen.target)
   - Eclipse Photon (4.8): [`eclipse/photon/gcp-eclipse-photon.target`](eclipse/photon/gcp-eclipse-photon.target)
 
