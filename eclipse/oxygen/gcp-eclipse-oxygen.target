@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/mbarbero/fr.obeo.releng.targetplatform -->
-<target name="GCP for Eclipse Oxygen" sequenceNumber="1537534561">
+<target name="GCP for Eclipse Oxygen" sequenceNumber="1537543952">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.sdk.feature.group" version="4.7.3.v20180330-0919"/>
@@ -21,14 +21,14 @@
       <repository location="http://download.eclipse.org/releases/oxygen/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
-      <unit id="org.eclipse.jst.web_sdk.feature.feature.group" version="3.8.0.v201802152012"/>
+      <unit id="org.eclipse.jst.web_sdk.feature.feature.group" version="3.8.0.v201803221834"/>
       <unit id="org.eclipse.jst.server_sdk.feature.feature.group" version="3.4.300.v201709251835"/>
-      <unit id="org.eclipse.jst.common.fproj.enablement.jdt.sdk.feature.group" version="3.8.0.v201710021614"/>
+      <unit id="org.eclipse.jst.common.fproj.enablement.jdt.sdk.feature.group" version="3.8.0.v201803211504"/>
       <unit id="org.eclipse.wst.common.fproj.sdk.feature.group" version="3.7.1.v201707201954"/>
-      <unit id="org.eclipse.wst.web_sdk.feature.feature.group" version="3.9.2.v201802281510"/>
-      <unit id="org.eclipse.jst.enterprise_sdk.feature.feature.group" version="3.8.1.v201802121827"/>
+      <unit id="org.eclipse.wst.web_sdk.feature.feature.group" version="3.9.2.v201804042202"/>
+      <unit id="org.eclipse.jst.enterprise_sdk.feature.feature.group" version="3.8.1.v201803221418"/>
       <unit id="org.eclipse.wst.server_adapters.sdk.feature.feature.group" version="3.2.600.v201711302104"/>
-      <repository location="http://download.eclipse.org/webtools/downloads/drops/R3.9.3/R-3.9.3-20180302093744/repository"/>
+      <repository location="http://download.eclipse.org/webtools/repository/oxygen"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.linuxtools.docker.feature.feature.group" version="4.0.1.201809121533"/>

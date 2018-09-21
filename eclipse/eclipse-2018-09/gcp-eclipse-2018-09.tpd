@@ -11,8 +11,8 @@
  */
 target "GCP for Eclipse 2018-09" with source requirements
 
-// Eclipse 2018-09 M3 (composite at http://download.eclipse.org/releases/2018-09/)
-location "http://download.eclipse.org/releases/2018-09/201809071000/" {
+// Eclipse 2018-09 composite
+location "http://download.eclipse.org/releases/2018-09/" {
 	org.eclipse.sdk.feature.group
 	org.eclipse.jdt.feature.group
 	org.eclipse.m2e.feature.feature.group
@@ -32,8 +32,8 @@ location "http://download.eclipse.org/releases/2018-09/201809071000/" {
 }
 
 // WTP SDKs aren't exposed through the main release links
-// (composite at http://download.eclipse.org/webtools/repository/photon)
-location "http://download.eclipse.org/webtools/downloads/drops/R3.11.0/S-3.11.0.M2-20180803074505/repository" {
+// (composite at http://download.eclipse.org/webtools/repository/2018-09 is missing)
+location "http://download.eclipse.org/webtools/downloads/drops/R3.11.0/S-3.11.0.RC1-20180910170749/repository" {
     org.eclipse.jst.web_sdk.feature.feature.group
     org.eclipse.jst.server_sdk.feature.feature.group
     org.eclipse.jst.common.fproj.enablement.jdt.sdk.feature.group
