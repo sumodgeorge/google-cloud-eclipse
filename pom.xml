@@ -597,7 +597,6 @@
               </execution>
             </executions>
             <configuration>
-              <verbose>true</verbose>
               <source>8</source>
               <target>8</target>
               <compilerArgs>
