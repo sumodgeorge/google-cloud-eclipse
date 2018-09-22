@@ -201,6 +201,9 @@ public class ProjectUtils {
    */
   public static void failIfBuildErrors(String message, IProject... projects) throws CoreException {
     Set<String> errors = getAllBuildErrors(projects);
+    if (!errors.isEmpty()) {
+      ThreadDumpingWatchdog.report("Build errors", null);
+    }
     assertTrue(message + "\n" + Joiner.on("\n").join(errors), errors.isEmpty());
   }
 
