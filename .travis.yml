@@ -28,6 +28,10 @@ matrix:
     - name: "Eclipse 2018-09 (4.9) on Java 11"
       jdk: openjdk11
       env: ECLIPSE_TARGET=2018-09 MAVEN_FLAGS='--toolchains=.travisci/toolchains.xml'
+    - name: "Eclipse 2018-09 (4.9) on Java 8 (Windows)"
+      jdk: oraclejdk8
+      os: windows
+      env: ECLIPSE_TARGET=2018-09
 env:
   global:
     - CLOUD_SDK_HOME=$HOME/google-cloud-sdk
