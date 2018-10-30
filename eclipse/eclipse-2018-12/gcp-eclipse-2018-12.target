@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
-<!-- generated with https://github.com/mbarbero/fr.obeo.releng.targetplatform -->
-<target name="GCP for Eclipse 2018-09" sequenceNumber="1539699437">
+<!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
+<target name="GCP for Eclipse 2018-12" sequenceNumber="1540912924">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
-      <unit id="org.eclipse.sdk.feature.group" version="4.9.0.v20180830-1030"/>
-      <unit id="org.eclipse.jdt.feature.group" version="3.15.0.v20180830-1030"/>
-      <unit id="org.eclipse.m2e.feature.feature.group" version="1.9.1.20180906-0204"/>
-      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="1.9.1.20180906-0204"/>
+      <unit id="org.eclipse.sdk.feature.group" version="4.10.0.v20181010-1800"/>
+      <unit id="org.eclipse.jdt.feature.group" version="3.16.0.v20181010-1800"/>
+      <unit id="org.eclipse.m2e.feature.feature.group" version="1.9.1.20180912-1601"/>
+      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="1.9.1.20180912-1601"/>
       <unit id="org.eclipse.m2e.wtp.feature.feature.group" version="1.4.0.20180606-2005"/>
       <unit id="org.eclipse.m2e.wtp.sdk.feature.feature.group" version="1.4.0.20180606-2005"/>
       <unit id="org.eclipse.mylyn.commons.feature.group" version="3.24.2.v20180904-2231"/>
       <unit id="org.eclipse.jpt.jpa.feature.feature.group" version="3.5.101.v201807122215"/>
       <unit id="org.eclipse.epp.logging.aeri.feature.feature.group" version="2.0.7.v20180504-0806"/>
       <unit id="org.eclipse.epp.logging.aeri.feature.source.feature.group" version="2.0.7.v20180504-0806"/>
-      <unit id="org.eclipse.jetty.http" version="9.4.11.v20180605"/>
-      <unit id="org.eclipse.jetty.servlet" version="9.4.11.v20180605"/>
-      <unit id="org.eclipse.jetty.server" version="9.4.11.v20180605"/>
-      <unit id="org.eclipse.jetty.util" version="9.4.11.v20180605"/>
-      <repository location="http://download.eclipse.org/releases/2018-09/201809071000/"/>
+      <unit id="org.eclipse.jetty.http" version="9.4.12.v20180830"/>
+      <unit id="org.eclipse.jetty.servlet" version="9.4.12.v20180830"/>
+      <unit id="org.eclipse.jetty.server" version="9.4.12.v20180830"/>
+      <unit id="org.eclipse.jetty.util" version="9.4.12.v20180830"/>
+      <repository location="http://download.eclipse.org/releases/2018-12/201810191000/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.jst.web_sdk.feature.feature.group" version="3.8.0.v201802202154"/>
@@ -28,7 +28,7 @@
       <unit id="org.eclipse.wst.web_sdk.feature.feature.group" version="3.11.0.v201807251925"/>
       <unit id="org.eclipse.jst.enterprise_sdk.feature.feature.group" version="3.8.1.v201802202154"/>
       <unit id="org.eclipse.wst.server_adapters.sdk.feature.feature.group" version="3.2.601.v201802152148"/>
-      <repository location="http://download.eclipse.org/webtools/downloads/drops/R3.11.0/R-3.11.0-20180910170749/repository"/>
+      <repository location="http://download.eclipse.org/webtools/downloads/drops/R3.12.0/S-3.12.0.M1-20181011033659/repository"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.linuxtools.docker.feature.feature.group" version="4.0.2.201809272014"/>
