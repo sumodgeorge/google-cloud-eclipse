@@ -1,6 +1,6 @@
 /*
  * Common Dependencies for the different platform Target Platform Dependencies.
- */ 
+ */
 target "Cloud Tools for Eclipse: Common Dependencies"
 
 location "http://download.eclipse.org/tools/orbit/downloads/latest-R/" {
