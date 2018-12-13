@@ -261,12 +261,12 @@ couple of dependencies.  We instead generate these `.target`s from
 _Target Platform Definition_ `.tpd` files.
 The `.tpd` files use a simple DSL to specify the bundles and features,
 and the location of the repositories containing them.
-The `.tpd` files are processed using the [TPD Editor](https://github.com/mbarbero/fr.obeo.releng.targetplatform)
+The `.tpd` files are processed using the [TPD Editor](https://github.com/eclipse-cbi/targetplatform-dsl)
 which resolves the specified dependencies and creates a `.target`.
 The process is:
 
   1. Install the TPD Editor, if necessary
-     - Use _Help > Install New Software_ and specify `http://mbarbero.github.io/fr.obeo.releng.targetplatform/p2/latest/`
+     - Use _Help > Install New Software_ and specify `http://download.eclipse.org/cbi/tpd/3.0.0-SNAPSHOT/`
        as the location.
      - Restart Eclipse when prompted
   2. Open the `.tpd` file in Eclipse.
