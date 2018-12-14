@@ -79,17 +79,6 @@ public class CodeTemplatesTest {
   }
 
   @Test
-  public void testMaterializeAppEngineStandardFiles()
-      throws CoreException, ParserConfigurationException, SAXException, IOException {
-    AppEngineProjectConfig config = new AppEngineProjectConfig();
-    IFile mostImportant = CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
-    validateNonConfigFiles(mostImportant, "http://java.sun.com/xml/ns/javaee",
-        "http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd", "2.5");
-    validateAppEngineWebXml(AppEngineRuntime.STANDARD_JAVA_7);
-    validateLoggingProperties();
-  }
-
-  @Test
   public void testMaterializeAppEngineStandardFiles_java8()
       throws CoreException, ParserConfigurationException, SAXException, IOException {
     AppEngineProjectConfig config = new AppEngineProjectConfig();
@@ -102,26 +91,6 @@ public class CodeTemplatesTest {
   }
 
   @Test
-  public void testMaterializeAppEngineStandardFiles_noObjectifyWithJava7()
-      throws CoreException, ParserConfigurationException, SAXException, IOException {
-    AppEngineProjectConfig config = new AppEngineProjectConfig();
-    CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
-    assertFalse(objectifyFilterClassExists());
-    validateObjectifyFilterConfigInWebXml(false);
-  }
-
-  @Test
-  public void testMaterializeAppEngineStandardFiles_objectifyWithJava7()
-      throws CoreException, ParserConfigurationException, SAXException, IOException {
-    AppEngineProjectConfig config = new AppEngineProjectConfig();
-    config.setAppEngineLibraries(Collections.singleton(new Library("objectify")));
-
-    CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
-    assertFalse(objectifyFilterClassExists());
-    validateObjectifyFilterConfigInWebXml(true);
-  }
-
-  @Test
   public void testMaterializeAppEngineStandardFiles_noObjectifyWithJava8()
       throws CoreException, ParserConfigurationException, SAXException, IOException {
     AppEngineProjectConfig config = new AppEngineProjectConfig();
@@ -129,7 +98,7 @@ public class CodeTemplatesTest {
 
     CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
     assertFalse(objectifyFilterClassExists());
-    validateObjectifyFilterConfigInWebXml(false);
+    validateNoFilterConfigInWebXml();
   }
 
   @Test
@@ -141,7 +110,7 @@ public class CodeTemplatesTest {
 
     CodeTemplates.materializeAppEngineStandardFiles(project, config, monitor);
     assertTrue(objectifyFilterClassExists());
-    validateObjectifyFilterConfigInWebXml(false);
+    validateNoFilterConfigInWebXml();
   }
 
   @Test
@@ -268,20 +237,6 @@ public class CodeTemplatesTest {
     assertTrue(CodeTemplates.isObjectify6Selected(config));
   }
 
-  @Test
-  public void testIsStandardJava7RuntimeSelected_java7() {
-    AppEngineProjectConfig config = new AppEngineProjectConfig();
-    config.setRuntimeId(null);  // null runtime corresponds to Java 7 runtime
-    assertTrue(CodeTemplates.isStandardJava7RuntimeSelected(config));
-  }
-
-  @Test
-  public void testIsStandardJava7RuntimeSelected_java8() {
-    AppEngineProjectConfig config = new AppEngineProjectConfig();
-    config.setRuntimeId("java8");
-    assertFalse(CodeTemplates.isStandardJava7RuntimeSelected(config));
-  }
-
   private boolean objectifyListenerClassExists() {
     return project.getFile("src/main/java/ObjectifyWebListener.java").exists();
   }
@@ -290,25 +245,17 @@ public class CodeTemplatesTest {
     return project.getFile("src/main/java/ObjectifyWebFilter.java").exists();
   }
 
-  private void validateObjectifyFilterConfigInWebXml(boolean configExpected)
+  private void validateNoFilterConfigInWebXml()
       throws ParserConfigurationException, SAXException, IOException, CoreException {
     IFile webXml = project.getFile("src/main/webapp/WEB-INF/web.xml");
     Element root = buildDocument(webXml).getDocumentElement();
 
     NodeList filterNames =
         root.getElementsByTagNameNS("http://java.sun.com/xml/ns/javaee", "filter-name");
-    if (configExpected) {
-      assertEquals(2, filterNames.getLength());
-      assertEquals("ObjectifyFilter", filterNames.item(0).getTextContent());
-      assertEquals("ObjectifyFilter", filterNames.item(1).getTextContent());
-
-      NodeList filterClass =
-          root.getElementsByTagNameNS("http://java.sun.com/xml/ns/javaee", "filter-class");
-      assertEquals(
-          "com.googlecode.objectify.ObjectifyFilter", filterClass.item(0).getTextContent());
-    } else {
-      assertEquals(0, filterNames.getLength());
-    }
+    assertEquals(0, filterNames.getLength());
+    NodeList filterClass =
+        root.getElementsByTagNameNS("http://java.sun.com/xml/ns/javaee", "filter-class");
+    assertEquals(0, filterClass.getLength());
   }
 
   private void validateNonConfigFiles(IFile mostImportant,
