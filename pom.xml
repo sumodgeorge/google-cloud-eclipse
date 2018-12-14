@@ -43,6 +43,7 @@
     <tycho-extras.version>1.1.0</tycho-extras.version>
     <product.version.qualifier.suffix/>  <!-- 0-length string by default -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <eclipse.target>photon</eclipse.target> <!-- the default build -->
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 
@@ -232,7 +233,13 @@
           </filters>
           <environments>
             <environment>
+              <os>linux</os> <ws>gtk</ws> <arch>x86</arch>
+            </environment>
+            <environment>
               <os>linux</os> <ws>gtk</ws> <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>win32</os> <ws>win32</ws> <arch>x86</arch>
             </environment>
             <environment>
               <os>win32</os> <ws>win32</ws> <arch>x86_64</arch>
@@ -432,7 +439,8 @@
       <activation>
         <!-- Default target if no eclipse.target specified. -->
         <property>
-          <name>eclipse.target</name> <value>photon</value>
+          <name>!eclipse.target</name>
+          <!-- when no longer the default: <name>eclipse.target</name> <value>photon</value> -->
         </property>
       </activation>
       <properties>
@@ -466,7 +474,7 @@
       <id>build-eclipse-2018-09</id>
       <activation>
         <property>
-          <name>!eclipse.target</name>
+          <name>eclipse.target</name> <value>2018-09</value>
         </property>
       </activation>
       <properties>
@@ -488,40 +496,6 @@
                 <groupId>com.google.cloud.tools.eclipse</groupId>
                 <artifactId>gcp-eclipse-2018-09</artifactId>
                 <version>4.9.0-SNAPSHOT</version>
-              </artifact>
-            </target>
-           </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>build-eclipse-2018-12</id>
-      <activation>
-        <property>
-          <name>eclipse.target</name> <value>2018-12</value>
-        </property>
-      </activation>
-      <properties>
-         <jettyMinVersion>9.4</jettyMinVersion>
-         <jettyMaxVersion>9.5</jettyMaxVersion>
-      </properties>
-      <!-- build against a known target platform -->
-      <modules>
-        <module>eclipse/eclipse-2018-12</module>
-      </modules>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.eclipse.tycho</groupId>
-            <artifactId>target-platform-configuration</artifactId>
-            <configuration>
-            <target>
-              <artifact>
-                <groupId>com.google.cloud.tools.eclipse</groupId>
-                <artifactId>gcp-eclipse-2018-12</artifactId>
-                <version>4.10.0-SNAPSHOT</version>
               </artifact>
             </target>
            </configuration>
@@ -683,4 +657,6 @@
       </snapshots>
     </repository>
   </repositories>
+<pluginRepositories>
+</pluginRepositories>
 </project>
