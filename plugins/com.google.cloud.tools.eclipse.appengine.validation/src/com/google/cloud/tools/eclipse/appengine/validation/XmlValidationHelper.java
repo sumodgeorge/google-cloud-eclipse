@@ -24,8 +24,8 @@ interface XmlValidationHelper {
 
   /**
    * Searches the {@link Document} for banned elements and returns them
-   * as a list of {@link BannedElement}s.
+   * as a list of {@link ElementProblem}s.
    */
-  ArrayList<BannedElement> checkForElements(IResource resource, Document document);
+  ArrayList<ElementProblem> checkForElements(IResource resource, Document document);
 
 }

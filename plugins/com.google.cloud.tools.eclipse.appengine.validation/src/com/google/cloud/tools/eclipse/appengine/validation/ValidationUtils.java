@@ -36,13 +36,13 @@ public class ValidationUtils {
   private static final Logger logger = Logger.getLogger(ValidationUtils.class.getName());
 
   /**
-   * Creates a {@link Map} of {@link BannedElement}s and their respective document-relative
+   * Creates a {@link Map} of {@link ElementProblem}s and their respective document-relative
    * character offsets.
    */
-  public static Map<BannedElement, Integer> getOffsetMap(byte[] bytes,
-      ArrayList<BannedElement> blacklist, String encoding) {
-    Map<BannedElement, Integer> bannedElementOffsetMap = new HashMap<>();
-    for (BannedElement element : blacklist) {
+  public static Map<ElementProblem, Integer> getOffsetMap(byte[] bytes,
+      ArrayList<ElementProblem> blacklist, String encoding) {
+    Map<ElementProblem, Integer> bannedElementOffsetMap = new HashMap<>();
+    for (ElementProblem element : blacklist) {
       ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
       try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(bais, encoding))) {
