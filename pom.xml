@@ -34,7 +34,6 @@
     <module>plugins</module>
     <module>third_party</module>
   </modules>
-
   <properties>
     <!-- Execution environment supported by Cloud Tools for Eclipse -->
     <requiredExecutionEnvironment>JavaSE-1.8</requiredExecutionEnvironment>
