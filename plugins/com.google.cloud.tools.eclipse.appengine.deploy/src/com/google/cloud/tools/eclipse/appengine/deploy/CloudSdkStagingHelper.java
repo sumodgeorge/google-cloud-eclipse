@@ -57,6 +57,7 @@ public class CloudSdkStagingHelper {
             .disableUpdateCheck(true)
             .build();
 
+
     appEngineStandardStaging.stageStandard(stagingConfig);
 
     progress.worked(1);

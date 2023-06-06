@@ -20,8 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.fail;
 
-import com.google.cloud.tools.eclipse.googleapis.IGoogleApiFactory;
-import com.google.cloud.tools.eclipse.login.IGoogleLoginService;
+import com.google.cloud.tools.eclipse.test.util.TestAccountProvider;
 import com.google.cloud.tools.eclipse.test.util.ui.CompositeUtil;
 import com.google.cloud.tools.eclipse.test.util.ui.ShellTestResource;
 import org.eclipse.core.resources.IProject;
@@ -29,10 +28,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.widgets.SharedScrolledComposite;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,14 +39,15 @@ public abstract class DeployPropertyPageTest<P extends DeployPreferencesPanel> {
 
   @Rule
   public ShellTestResource shellTestResource = new ShellTestResource();
-  @Mock
-  private IGoogleLoginService loginService;
-  @Mock
-  private IGoogleApiFactory googleApiFactory;
 
+  @Before
+  public void setup() {
+    TestAccountProvider.setAsDefaultProvider();
+  }
+  
   @Test
   public void testCorrectPanelIsShownForFacetedProject() {
-    DeployPropertyPage page = new DeployPropertyPage(loginService, googleApiFactory);
+    DeployPropertyPage page = new DeployPropertyPage();
     Shell parent = shellTestResource.getShell();
     page.setElement(getProject());
     page.createControl(parent);
