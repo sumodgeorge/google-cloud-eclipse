@@ -114,7 +114,7 @@
       <!-- bundle: com.google.guava -->
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>26.0-jre</version>
+      <version>32.0.0-jre</version>
     </dependency>
     <dependency>
       <!-- bundle: jackson-core-asl -->
